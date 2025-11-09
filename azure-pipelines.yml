@@ -53,8 +53,8 @@ stages:
               DB_HOST: '$(DB_HOST)'
               DB_PORT: '$(DB_PORT)'
               DB_NAME: '$(DB_NAME)'
-              DB_USERNAME: '$(DB_USERNAME)'  # ← Adicione no Azure DevOps
-              DB_PASSWORD: '$(DB_PASSWORD)'  # ← Adicione no Azure DevOps (Secret!)
+              DB_USERNAME: '$(DB_USERNAME)'
+              DB_PASSWORD: '$(DB_PASSWORD)'
               SPRING_PROFILES_ACTIVE: 'postgres'
 
           - task: PublishBuildArtifacts@1
@@ -100,28 +100,3 @@ stages:
               testResultsFormat: 'JUnit'
               testResultsFiles: '**/surefire-reports/TEST-*.xml'
             condition: always()
-
-  - stage: Deploy
-    displayName: 'Deploy to Azure'
-    dependsOn: Test
-    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
-    jobs:
-      - job: DeployJob
-        displayName: 'Deploy Application'
-        steps:
-          - checkout: self
-
-          - task: DownloadBuildArtifacts@0
-            inputs:
-              artifactName: 'mottu-api'
-              downloadPath: '$(System.ArtifactsDirectory)'
-
-          - task: AzureCLI@2
-            displayName: 'Deploy to App Service'
-            inputs:
-              azureSubscription: 'Azure Subscription'
-              scriptType: 'bash'
-              scriptLocation: 'inlineScript'
-              inlineScript: |
-                echo "Deploy placeholder - configure seu App Service aqui"
-                ls -la $(System.ArtifactsDirectory)/mottu-api/
