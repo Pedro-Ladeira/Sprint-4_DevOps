@@ -29,7 +29,7 @@ public class UsuarioSistemaService {
     }
 
     @Transactional(readOnly = true)
-    public Optional<UsuarioSistema> buscarPorId(Long id) {
+    public Optional<UsuarioSistema> buscarPorId(Integer id) {
         return usuarioRepository.findById(id);
     }
 
@@ -47,7 +47,7 @@ public class UsuarioSistemaService {
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado: " + username));
     }
 
-    public void alterarSenha(long id, String novaSenha) {
+    public void alterarSenha(Integer id, String novaSenha) {
         Optional<UsuarioSistema> usuarioOpt = usuarioRepository.findById(id);
         if (usuarioOpt.isPresent()) {
             UsuarioSistema usuario = usuarioOpt.get();

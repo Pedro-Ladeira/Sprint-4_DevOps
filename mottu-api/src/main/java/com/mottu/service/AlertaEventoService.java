@@ -40,7 +40,7 @@ public class AlertaEventoService {
     }
 
     @Transactional(readOnly = true)
-    public Optional<AlertaEvento> buscarPorId(Long id) {
+    public Optional<AlertaEvento> buscarPorId(Integer id) {
         return alertaEventoRepository.findById(id);
     }
 
@@ -50,8 +50,8 @@ public class AlertaEventoService {
     }
 
     @Transactional(readOnly = true)
-    public List<AlertaEvento> buscarPorMoto(Long motoId) {
-        Optional<Moto> motoOpt = motoRepository.findById(motoId.intValue());
+    public List<AlertaEvento> buscarPorMoto(Integer motoId) {
+        Optional<Moto> motoOpt = motoRepository.findById(motoId);
         return motoOpt.map(moto -> alertaEventoRepository.findByMoto(moto)).orElseGet(java.util.Collections::emptyList);
     }
 
@@ -78,8 +78,8 @@ public class AlertaEventoService {
     }
 
     @Transactional(readOnly = true)
-    public long contarAlertasPorMoto(Long motoId) {
-        Optional<Moto> motoOpt = motoRepository.findById(motoId.intValue());
+    public long contarAlertasPorMoto(Integer motoId) {
+        Optional<Moto> motoOpt = motoRepository.findById(motoId);
         return motoOpt.map(moto -> alertaEventoRepository.countByMoto(moto)).orElse(0L);
     }
 
@@ -88,8 +88,8 @@ public class AlertaEventoService {
         return alertaEventoRepository.save(alerta);
     }
 
-    public AlertaEvento criarAlerta(String tipoAlerta, Long motoId) {
-        Moto moto = motoRepository.findById(motoId.intValue())
+    public AlertaEvento criarAlerta(String tipoAlerta, Integer motoId) {
+        Moto moto = motoRepository.findById(motoId)
                 .orElseThrow(() -> new RuntimeException("Moto não encontrada com ID: " + motoId));
         AlertaEvento alerta = AlertaEvento.builder()
                 .tipoAlerta(tipoAlerta)
@@ -110,7 +110,7 @@ public class AlertaEventoService {
                 });
     }
 
-    public void deletar(Long id) {
+    public void deletar(Integer id) {
         if (!alertaEventoRepository.existsById(id)) {
             throw new RuntimeException("Alerta não encontrado com ID: " + id);
         }

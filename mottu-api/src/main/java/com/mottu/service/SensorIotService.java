@@ -31,8 +31,8 @@ public class SensorIotService {
     }
 
     @Transactional(readOnly = true)
-    public Optional<SensorIot> buscarPorId(Long id) {
-        return sensorIotRepository.findById(id.intValue()); // Converte Long->Integer
+    public Optional<SensorIot> buscarPorId(Integer id) {
+        return sensorIotRepository.findById(id);
     }
 
     @Transactional(readOnly = true)
@@ -71,7 +71,7 @@ public class SensorIotService {
         return sensorIotRepository.save(sensor);
     }
 
-    public SensorIot atualizarBateria(Long sensorId, BigDecimal novoPercentual) {
+    public SensorIot atualizarBateria(Integer sensorId, BigDecimal novoPercentual) {
         Optional<SensorIot> sensorOpt = buscarPorId(sensorId);
         if (sensorOpt.isPresent()) {
             SensorIot sensor = sensorOpt.get();
@@ -82,7 +82,7 @@ public class SensorIotService {
         throw new RuntimeException("Sensor não encontrado com ID: " + sensorId);
     }
 
-    public SensorIot atualizarTransmissao(Long sensorId) {
+    public SensorIot atualizarTransmissao(Integer sensorId) {
         Optional<SensorIot> sensorOpt = buscarPorId(sensorId);
         if (sensorOpt.isPresent()) {
             SensorIot sensor = sensorOpt.get();
@@ -92,11 +92,11 @@ public class SensorIotService {
         throw new RuntimeException("Sensor não encontrado com ID: " + sensorId);
     }
 
-    public void deletar(Long id) {
-        if (!sensorIotRepository.existsById(id.intValue())) {
+    public void deletar(Integer id) {
+        if (!sensorIotRepository.existsById(id)) {
             throw new RuntimeException("Sensor não encontrado com ID: " + id);
         }
-        sensorIotRepository.deleteById(id.intValue());
+        sensorIotRepository.deleteById(id);
     }
 
     private void validarSensor(SensorIot sensor) {

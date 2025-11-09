@@ -34,7 +34,7 @@ public class PatioController {
     }
 
     @GetMapping("/patios/{id}")
-    public String detalhe(@PathVariable Long id, Model model) {
+    public String detalhe(@PathVariable Integer id, Model model) {
         model.addAttribute("patio", patioService.buscarPorId(id).orElse(null));
         return "patio/patio-view";
     }
@@ -57,14 +57,14 @@ public class PatioController {
     }
 
     @PostMapping("/patios/{id}")
-    public String atualizar(@PathVariable Long id, @Valid @ModelAttribute("patio") Patio patio, BindingResult result, Model model, RedirectAttributes redirect) {
+    public String atualizar(@PathVariable Integer id, @Valid @ModelAttribute("patio") Patio patio, BindingResult result, Model model, RedirectAttributes redirect) {
         if (result.hasErrors()) {
             model.addAttribute("patio", patio);
             return "patio/patio-form";
         }
         try {
             // Ensure id is set
-            patio.setIdPatio(id.intValue());
+            patio.setIdPatio(id);
             patioService.salvar(patio);
             redirect.addFlashAttribute("success", "Pátio atualizado com sucesso!");
             return "redirect:/patios";

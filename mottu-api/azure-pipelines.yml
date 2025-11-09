@@ -1,0 +1,120 @@
+trigger:
+  branches:
+    include:
+      - main
+
+pr:
+  branches:
+    include:
+      - main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  MAVEN_OPTS: '-Xmx1024m'
+  DB_HOST: 'pg-flex-sprint4.postgres.database.azure.com'
+  DB_PORT: '5432'
+  DB_NAME: 'appdb'
+
+stages:
+  - stage: Build
+    displayName: 'Build and Package'
+    jobs:
+      - job: Build
+        displayName: 'Maven build'
+        steps:
+          - checkout: self
+
+          - task: JavaToolInstaller@0
+            displayName: 'Install JDK 17'
+            inputs:
+              versionSpec: '17'
+              jdkArchitectureOption: 'x64'
+
+          - task: Cache@2
+            inputs:
+              key: 'maven | "$(Agent.OS)" | mottu-api/pom.xml'
+              path: '~/.m2/repository'
+              restoreKeys: |
+                maven | "$(Agent.OS)"
+
+          - task: Maven@3
+            displayName: 'Maven - clean package'
+            inputs:
+              mavenPomFile: 'mottu-api/pom.xml'
+              goals: 'clean package'
+              options: '-DskipTests'
+              javaHomeOption: 'JDKVersion'
+              jdkVersionOption: '1.17'
+              publishJUnitResults: false
+              mavenOptions: '$(MAVEN_OPTS)'
+            env:
+              DB_HOST: '$(DB_HOST)'
+              DB_PORT: '$(DB_PORT)'
+              DB_NAME: '$(DB_NAME)'
+              DB_USERNAME: '$(DB_USERNAME)'
+              DB_PASSWORD: '$(DB_PASSWORD)'
+              SPRING_PROFILES_ACTIVE: 'postgres'
+
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish artifact'
+            inputs:
+              PathtoPublish: 'mottu-api/target'
+              ArtifactName: 'mottu-api'
+              publishLocation: 'Container'
+
+  - stage: Test
+    displayName: 'Run Tests'
+    dependsOn: Build
+    condition: succeeded()
+    jobs:
+      - job: Tests
+        displayName: 'Unit Tests'
+        steps:
+          - checkout: self
+
+          - task: JavaToolInstaller@0
+            displayName: 'Install JDK 17'
+            inputs:
+              versionSpec: '17'
+              jdkArchitectureOption: 'x64'
+
+          - task: Maven@3
+            displayName: 'Maven - run tests'
+            inputs:
+              mavenPomFile: 'mottu-api/pom.xml'
+              goals: 'test'
+              javaHomeOption: 'JDKVersion'
+              jdkVersionOption: '1.17'
+
+          - task: PublishTestResults@2
+            inputs:
+              testResultsFormat: 'JUnit'
+              testResultsFiles: '**/surefire-reports/TEST-*.xml'
+            condition: always()
+
+  - stage: Deploy
+    displayName: 'Deploy to Azure'
+    dependsOn: Test
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - job: DeployJob
+        displayName: 'Deploy Application'
+        steps:
+          - checkout: self
+
+          - task: DownloadBuildArtifacts@0
+            inputs:
+              artifactName: 'mottu-api'
+              downloadPath: '$(System.ArtifactsDirectory)'
+
+          - task: AzureCLI@2
+            displayName: 'Deploy to App Service'
+            inputs:
+              azureSubscription: 'Azure Subscription'
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                echo "Deploy placeholder - configure seu App Service aqui"
+                ls -la $(System.ArtifactsDirectory)/mottu-api/

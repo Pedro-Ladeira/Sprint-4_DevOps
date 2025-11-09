@@ -10,8 +10,8 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface UsuarioSistemaRepository extends JpaRepository<UsuarioSistema, Long> {
-    
+public interface UsuarioSistemaRepository extends JpaRepository<UsuarioSistema, Integer> {
+
     // Busca por email (para autenticação)
     Optional<UsuarioSistema> findByEmail(String email);
     

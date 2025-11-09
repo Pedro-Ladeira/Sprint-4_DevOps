@@ -27,7 +27,7 @@ public class UsuarioController {
     }
 
     @GetMapping("/usuarios/{id}")
-    public String detalhe(@PathVariable Long id, Model model) {
+    public String detalhe(@PathVariable Integer id, Model model) {
         model.addAttribute("usuario", usuarioService.buscarPorId(id).orElse(null));
         return "usuario/usuario-view";
     }

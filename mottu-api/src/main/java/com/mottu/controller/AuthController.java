@@ -135,7 +135,7 @@ public class AuthController {
 
         try {
             UsuarioSistema usuario = (UsuarioSistema) usuarioService.loadUserByUsername(principal.getName());
-            usuarioService.alterarSenha(usuario.getIdUsuario().longValue(), novaSenha);
+            usuarioService.alterarSenha(usuario.getIdUsuario(), novaSenha);
 
             redirectAttributes.addFlashAttribute("success", "Senha alterada com sucesso!");
             return "redirect:/auth/profile";

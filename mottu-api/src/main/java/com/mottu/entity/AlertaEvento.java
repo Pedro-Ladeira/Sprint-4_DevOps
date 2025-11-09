@@ -16,6 +16,7 @@ import java.time.LocalDate;
 public class AlertaEvento {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ID_ALERTA")
     private Integer idAlerta; // INTEGER no banco
 

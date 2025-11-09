@@ -29,8 +29,8 @@ public class ModeloService {
     }
 
     @Transactional(readOnly = true)
-    public Optional<Modelo> buscarPorId(Long id) {
-        return modeloRepository.findById(id.intValue()); // Converte Long->Integer
+    public Optional<Modelo> buscarPorId(Integer id) {
+        return modeloRepository.findById(id);
     }
 
     @Transactional(readOnly = true)
@@ -64,8 +64,8 @@ public class ModeloService {
     }
 
     @Transactional(readOnly = true)
-    public long contarMotosPorModelo(Long modeloId) {
-        return modeloRepository.countMotosByModeloId(modeloId.intValue()); // Converte Long->Integer
+    public long contarMotosPorModelo(Integer modeloId) {
+        return modeloRepository.countMotosByModeloId(modeloId);
     }
 
     public Modelo salvar(Modelo modelo) {
@@ -76,8 +76,8 @@ public class ModeloService {
         return saved;
     }
 
-    public void deletar(Long id) {
-        if (!modeloRepository.existsById(id.intValue())) {
+    public void deletar(Integer id) {
+        if (!modeloRepository.existsById(id)) {
             throw new RuntimeException("Modelo não encontrado com ID: " + id);
         }
 
@@ -86,7 +86,7 @@ public class ModeloService {
             throw new RuntimeException("Não é possível deletar o modelo. Existem " + motosVinculadas + " motos vinculadas.");
         }
 
-        modeloRepository.deleteById(id.intValue());
+        modeloRepository.deleteById(id);
     }
 
     private void validarModelo(Modelo modelo) {

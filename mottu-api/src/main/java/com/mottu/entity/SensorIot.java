@@ -10,6 +10,7 @@ import java.time.LocalDate;
 public class SensorIot {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ID_SENSOR_IOT")
     private Integer idSensorIot;
 

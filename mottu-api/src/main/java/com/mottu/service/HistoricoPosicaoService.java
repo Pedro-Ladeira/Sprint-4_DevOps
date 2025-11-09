@@ -37,17 +37,17 @@ public class HistoricoPosicaoService {
     }
 
     @Transactional(readOnly = true)
-    public List<HistoricoPosicao> buscarPorMoto(Long motoId) {
+    public List<HistoricoPosicao> buscarPorMoto(Integer motoId) {
         // Ajuste: buscar por id.moto.idMoto
         return historicoRepository.findAll().stream()
-            .filter(h -> h.getId() != null && h.getId().getMoto() != null && h.getId().getMoto().getIdMoto().equals(motoId.intValue()))
+            .filter(h -> h.getId() != null && h.getId().getMoto() != null && h.getId().getMoto().getIdMoto().equals(motoId))
             .toList();
     }
 
     @Transactional(readOnly = true)
-    public List<HistoricoPosicao> buscarPorMotoOrderByData(Long motoId) {
+    public List<HistoricoPosicao> buscarPorMotoOrderByData(Integer motoId) {
         return historicoRepository.findAll().stream()
-            .filter(h -> h.getId() != null && h.getId().getMoto() != null && h.getId().getMoto().getIdMoto().equals(motoId.intValue()))
+            .filter(h -> h.getId() != null && h.getId().getMoto() != null && h.getId().getMoto().getIdMoto().equals(motoId))
             .sorted((a, b) -> b.getId().getDataAtualizacao().compareTo(a.getId().getDataAtualizacao()))
             .toList();
     }
@@ -63,11 +63,11 @@ public class HistoricoPosicaoService {
     }
 
     @Transactional(readOnly = true)
-    public List<HistoricoPosicao> buscarPorMotoEPeriodo(Long motoId, LocalDate inicio, LocalDate fim) {
+    public List<HistoricoPosicao> buscarPorMotoEPeriodo(Integer motoId, LocalDate inicio, LocalDate fim) {
         return historicoRepository.findAll().stream()
             .filter(h -> h.getId() != null &&
                          h.getId().getMoto() != null &&
-                         h.getId().getMoto().getIdMoto().equals(motoId.intValue()) &&
+                         h.getId().getMoto().getIdMoto().equals(motoId) &&
                          h.getId().getDataAtualizacao() != null &&
                          (h.getId().getDataAtualizacao().isEqual(inicio) || h.getId().getDataAtualizacao().isAfter(inicio)) &&
                          (h.getId().getDataAtualizacao().isEqual(fim) || h.getId().getDataAtualizacao().isBefore(fim)))
@@ -89,28 +89,28 @@ public class HistoricoPosicaoService {
     }
 
     @Transactional(readOnly = true)
-    public Optional<HistoricoPosicao> buscarUltimaPosicaoMoto(Long motoId) {
+    public Optional<HistoricoPosicao> buscarUltimaPosicaoMoto(Integer motoId) {
         return buscarPorMotoOrderByData(motoId).stream().findFirst();
     }
 
     @Transactional(readOnly = true)
-    public List<HistoricoPosicao> buscarHistoricoRecente(Long motoId, int dias) {
+    public List<HistoricoPosicao> buscarHistoricoRecente(Integer motoId, int dias) {
         LocalDate dataLimite = LocalDate.now().minusDays(dias);
         return historicoRepository.findAll().stream()
             .filter(h -> h.getId() != null &&
                          h.getId().getMoto() != null &&
-                         h.getId().getMoto().getIdMoto().equals(motoId.intValue()) &&
+                         h.getId().getMoto().getIdMoto().equals(motoId) &&
                          h.getId().getDataAtualizacao() != null &&
                          h.getId().getDataAtualizacao().isAfter(dataLimite))
             .toList();
     }
 
     @Transactional(readOnly = true)
-    public long contarRegistrosPorMoto(Long motoId) {
+    public long contarRegistrosPorMoto(Integer motoId) {
         return historicoRepository.findAll().stream()
             .filter(h -> h.getId() != null &&
                          h.getId().getMoto() != null &&
-                         h.getId().getMoto().getIdMoto().equals(motoId.intValue()))
+                         h.getId().getMoto().getIdMoto().equals(motoId))
             .count();
     }
 
@@ -119,9 +119,9 @@ public class HistoricoPosicaoService {
         return historicoRepository.save(historico);
     }
 
-    public HistoricoPosicao registrarPosicao(Long motoId, BigDecimal posX, BigDecimal posY,
+    public HistoricoPosicao registrarPosicao(Integer motoId, BigDecimal posX, BigDecimal posY,
                                              BigDecimal acuracia, String origem, String status) {
-        Moto moto = motoRepository.findById(motoId.intValue())
+        Moto moto = motoRepository.findById(motoId)
                 .orElseThrow(() -> new RuntimeException("Moto não encontrada com ID: " + motoId));
         HistoricoPosicaoId id = new HistoricoPosicaoId(LocalDate.now(), moto);
         HistoricoPosicao historico = HistoricoPosicao.builder()
@@ -144,8 +144,8 @@ public class HistoricoPosicaoService {
             .forEach(historicoRepository::delete);
     }
 
-    public void deletar(Long motoId, LocalDate dataAtualizacao) {
-        Moto moto = motoRepository.findById(motoId.intValue())
+    public void deletar(Integer motoId, LocalDate dataAtualizacao) {
+        Moto moto = motoRepository.findById(motoId)
                 .orElseThrow(() -> new RuntimeException("Moto não encontrada com ID: " + motoId));
         HistoricoPosicaoId id = new HistoricoPosicaoId(dataAtualizacao, moto);
         historicoRepository.deleteById(id);

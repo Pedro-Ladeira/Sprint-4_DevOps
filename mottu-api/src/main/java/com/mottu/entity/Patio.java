@@ -10,6 +10,7 @@ import java.math.BigDecimal;
 public class Patio {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ID_PATIO")
     private Integer idPatio; // INTEGER no banco
 

@@ -30,8 +30,8 @@ public class PatioService {
     }
 
     @Transactional(readOnly = true)
-    public Optional<Patio> buscarPorId(Long id) {
-        return patioRepository.findById(id.intValue()); // Converte Long->Integer
+    public Optional<Patio> buscarPorId(Integer id) {
+        return patioRepository.findById(id);
     }
 
     @Transactional(readOnly = true)
@@ -65,18 +65,18 @@ public class PatioService {
     }
 
     @Transactional(readOnly = true)
-    public long contarMotosPorPatio(Long patioId) {
-        return patioRepository.countMotosByPatioId(patioId.intValue()); // Converte Long->Integer
+    public long contarMotosPorPatio(Integer patioId) {
+        return patioRepository.countMotosByPatioId(patioId);
     }
 
     @Transactional(readOnly = true)
-    public Double calcularTaxaOcupacao(Long patioId) {
-        BigDecimal taxa = patioRepository.calcularTaxaOcupacao(patioId.intValue()); // Repository retorna BigDecimal
+    public Double calcularTaxaOcupacao(Integer patioId) {
+        BigDecimal taxa = patioRepository.calcularTaxaOcupacao(patioId); // Repository retorna BigDecimal
         return taxa != null ? taxa.doubleValue() : 0.0; // Converte BigDecimal->Double
     }
 
     @Transactional(readOnly = true)
-    public Integer calcularEspacosDisponiveis(Long patioId) {
+    public Integer calcularEspacosDisponiveis(Integer patioId) {
         Optional<Patio> patio = buscarPorId(patioId);
         if (patio.isPresent()) {
             long motosOcupadas = contarMotosPorPatio(patioId);
@@ -90,8 +90,8 @@ public class PatioService {
         return patioRepository.save(patio);
     }
 
-    public void deletar(Long id) {
-        if (!patioRepository.existsById(id.intValue())) {
+    public void deletar(Integer id) {
+        if (!patioRepository.existsById(id)) {
             throw new RuntimeException("Pátio não encontrado com ID: " + id);
         }
 
@@ -100,11 +100,11 @@ public class PatioService {
             throw new RuntimeException("Não é possível deletar o pátio. Existem " + motosNoPatio + " motos no pátio.");
         }
 
-        patioRepository.deleteById(id.intValue());
+        patioRepository.deleteById(id);
     }
 
     private void validarPatio(Patio patio) {
-        if (patio.getIdPatio() == null || !patio.getNomePatio().equals(buscarPorId(patio.getIdPatio().longValue()).map(Patio::getNomePatio).orElse(null))) {
+        if (patio.getIdPatio() == null || !patio.getNomePatio().equals(buscarPorId(patio.getIdPatio()).map(Patio::getNomePatio).orElse(null))) {
             if (buscarPorNome(patio.getNomePatio()).isPresent()) {
                 throw new RuntimeException("Já existe um pátio com este nome: " + patio.getNomePatio());
             }

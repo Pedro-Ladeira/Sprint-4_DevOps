@@ -41,7 +41,7 @@ public class ModeloController {
     }
 
     @GetMapping("/modelos/{id}")
-    public String detalhe(@PathVariable Long id, Model model) {
+    public String detalhe(@PathVariable Integer id, Model model) {
         model.addAttribute("modelo", modeloService.buscarPorId(id).orElse(new Modelo()));
         return "modelo/modelo-view";
     }
@@ -63,13 +63,13 @@ public class ModeloController {
     }
 
     @PostMapping("/modelos/{id}")
-    public String atualizar(@PathVariable Long id, @Valid @ModelAttribute("modelo") Modelo modelo, BindingResult result, Model model, RedirectAttributes redirect) {
+    public String atualizar(@PathVariable Integer id, @Valid @ModelAttribute("modelo") Modelo modelo, BindingResult result, Model model, RedirectAttributes redirect) {
         if (result.hasErrors()) {
             model.addAttribute("modelo", modelo);
             return "modelo/modelo-form";
         }
         try {
-            modelo.setIdModelo(id.intValue());
+            modelo.setIdModelo(id);
             modeloService.salvar(modelo);
             redirect.addFlashAttribute("success", "Modelo atualizado com sucesso!");
             return "redirect:/modelos";

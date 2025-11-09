@@ -57,10 +57,10 @@ public class MotoController {
             return "moto/form";
         }
         if (moto.getModelo() != null && moto.getModelo().getIdModelo() != null) {
-            moto.setModelo(modeloService.buscarPorId(moto.getModelo().getIdModelo().longValue()).orElse(null));
+            moto.setModelo(modeloService.buscarPorId(moto.getModelo().getIdModelo()).orElse(null));
         }
         if (moto.getPatio() != null && moto.getPatio().getIdPatio() != null) {
-            moto.setPatio(patioService.buscarPorId(moto.getPatio().getIdPatio().longValue()).orElse(null));
+            moto.setPatio(patioService.buscarPorId(moto.getPatio().getIdPatio()).orElse(null));
         }
         motoService.salvar(moto);
         redirect.addFlashAttribute("success", "Moto salva com sucesso!");

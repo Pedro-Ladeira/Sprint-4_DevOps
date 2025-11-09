@@ -12,7 +12,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Repository
-public interface AlertaEventoRepository extends JpaRepository<AlertaEvento, Long> {
+public interface AlertaEventoRepository extends JpaRepository<AlertaEvento, Integer> {
 
     // Busca por tipo de alerta
     List<AlertaEvento> findByTipoAlerta(String tipoAlerta);
