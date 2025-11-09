@@ -3,8 +3,6 @@ trigger:
 
 pool:
   name: 'Default'
-  demands:
-    - Agent.Version -gtVersion 2.200.0
 
 variables:
   MAVEN_OPTS: '-Xmx1024m'
@@ -18,24 +16,26 @@ stages:
         steps:
           - checkout: self
 
-          - script: |
-              echo "Checking Java 17 and Maven on the agent..."
-              if ! command -v java >/dev/null 2>&1; then
-                echo "##[error]Java not found on agent. Install OpenJDK 17 and retry."
-                exit 1
-              fi
-              if ! java -version 2>&1 | grep -E '"17' >/dev/null 2>&1; then
-                echo "##[error]Java 17 is not installed on this agent. Install OpenJDK 17 and retry."
-                java -version 2>&1 || true
-                exit 1
-              fi
-              if ! command -v mvn >/dev/null 2>&1; then
-                echo "##[error]Maven not found on agent. Install Maven and retry."
-                exit 1
-              fi
-              mvn -version
+          - task: Bash@3
             displayName: 'Verify Java 17 and Maven are installed'
-            shell: bash
+            inputs:
+              targetType: 'inline'
+              script: |
+                echo "Checking Java 17 and Maven on the agent..."
+                if ! command -v java >/dev/null 2>&1; then
+                  echo "##[error]Java not found on agent. Install OpenJDK 17 and retry."
+                  exit 1
+                fi
+                if ! java -version 2>&1 | grep -E '"17' >/dev/null 2>&1; then
+                  echo "##[error]Java 17 is not installed on this agent. Install OpenJDK 17 and retry."
+                  java -version 2>&1 || true
+                  exit 1
+                fi
+                if ! command -v mvn >/dev/null 2>&1; then
+                  echo "##[error]Maven not found on agent. Install Maven and retry."
+                  exit 1
+                fi
+                mvn -version
 
           - task: Cache@2
             inputs:
@@ -69,24 +69,26 @@ stages:
         steps:
           - checkout: self
 
-          - script: |
-              echo "Checking Java 17 and Maven on the agent (tests)..."
-              if ! command -v java >/dev/null 2>&1; then
-                echo "##[error]Java not found on agent. Install OpenJDK 17 and retry."
-                exit 1
-              fi
-              if ! java -version 2>&1 | grep -E '"17' >/dev/null 2>&1; then
-                echo "##[error]Java 17 is not installed on this agent. Install OpenJDK 17 and retry."
-                java -version 2>&1 || true
-                exit 1
-              fi
-              if ! command -v mvn >/dev/null 2>&1; then
-                echo "##[error]Maven not found on agent. Install Maven and retry."
-                exit 1
-              fi
-              mvn -version
+          - task: Bash@3
             displayName: 'Verify Java 17 and Maven are installed (tests)'
-            shell: bash
+            inputs:
+              targetType: 'inline'
+              script: |
+                echo "Checking Java 17 and Maven on the agent (tests)..."
+                if ! command -v java >/dev/null 2>&1; then
+                  echo "##[error]Java not found on agent. Install OpenJDK 17 and retry."
+                  exit 1
+                fi
+                if ! java -version 2>&1 | grep -E '"17' >/dev/null 2>&1; then
+                  echo "##[error]Java 17 is not installed on this agent. Install OpenJDK 17 and retry."
+                  java -version 2>&1 || true
+                  exit 1
+                fi
+                if ! command -v mvn >/dev/null 2>&1; then
+                  echo "##[error]Maven not found on agent. Install Maven and retry."
+                  exit 1
+                fi
+                mvn -version
 
           - task: Maven@3
             displayName: 'Maven - run tests'
