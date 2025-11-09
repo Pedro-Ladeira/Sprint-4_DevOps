@@ -1,0 +1,45 @@
+ss{
+  "info": {
+    "name": "Mottu API",
+    "_postman_id": "mottu-api-collection",
+    "description": "Coleção mínima para testar endpoints principais",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "List Motos",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/api/motos",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["api","motos"]
+        }
+      }
+    },
+    {
+      "name": "Create Moto (example)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Content-Type", "value": "application/json"}
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"placa\": \"ABC1234\",\n  \"chassi\": \"CHASSI123\",\n  \"anoFabricacao\": 2020,\n  \"status\": \"ACTIVE\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8080/api/motos",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["api","motos"]
+        }
+      }
+    }
+  ]
+}
+

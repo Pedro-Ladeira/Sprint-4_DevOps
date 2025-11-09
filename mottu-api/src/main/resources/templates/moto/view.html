@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="pt-br" 
+      xmlns:th="http://www.thymeleaf.org" 
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" 
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout}">
+<head>
+    <title th:text="'Moto ' + ${moto.placa} + ' - Mottu'">Moto - Mottu</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 mb-1">
+                    <i class="fas fa-motorcycle me-2 text-primary"></i>
+                    Detalhes da Moto
+                </h1>
+                <p class="text-muted mb-0">Informações completas da moto <strong th:text="${moto.placa}">ABC1234</strong></p>
+            </div>
+            <div>
+                <a th:href="@{/motos}" class="btn btn-outline-secondary me-2">
+                    <i class="fas fa-arrow-left me-2"></i>Voltar
+                </a>
+                <a th:href="@{/motos/{id}/editar(id=${moto.idMoto})}" 
+                   class="btn btn-warning" 
+                   sec:authorize="hasAnyRole('ADMIN', 'OPERADOR')">
+                    <i class="fas fa-edit me-2"></i>Editar
+                </a>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Informações Principais -->
+            <div class="col-lg-8">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-info-circle me-2"></i>Dados Básicos
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted">Placa</label>
+                                <div class="fs-5 fw-bold" th:text="${moto.placa}">ABC1234</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted">Chassi</label>
+                                <div class="fs-6" th:text="${moto.chassi}">CHASSIS001ABC123456789</div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label text-muted">Ano de Fabricação</label>
+                                <div class="fs-6" th:text="${moto.anoFabricacao}">2023</div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label text-muted">Status</label>
+                                <div>
+                                    <span th:switch="${moto.status}">
+                                        <span th:case="'DISPONIVEL'" class="badge bg-success fs-6">
+                                            <i class="fas fa-check-circle me-1"></i>Disponível
+                                        </span>
+                                        <span th:case="'ALUGADA'" class="badge bg-warning fs-6">
+                                            <i class="fas fa-key me-1"></i>Alugada
+                                        </span>
+                                        <span th:case="'MANUTENCAO'" class="badge bg-danger fs-6">
+                                            <i class="fas fa-tools me-1"></i>Em Manutenção
+                                        </span>
+                                        <span th:case="*" class="badge bg-secondary fs-6" th:text="${moto.status}">
+                                            Status
+                                        </span>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3" th:if="${moto.dataAtualizacao != null}">
+                                <label class="form-label text-muted">Última Atualização</label>
+                                <div class="fs-6" th:text="${#temporals.format(moto.dataAtualizacao, 'dd/MM/yyyy')}">
+                                    01/01/2024
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Informações do Modelo -->
+                <div class="card mb-4" th:if="${moto.modelo != null}">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-cogs me-2"></i>Modelo
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted">Fabricante</label>
+                                <div class="fs-6" th:text="${moto.modelo.fabricante}">Honda</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted">Nome do Modelo</label>
+                                <div class="fs-6" th:text="${moto.modelo.nomeModelo}">CB600F</div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted">Cilindrada</label>
+                                <div class="fs-6">
+                                    <span th:text="${moto.modelo.cilindrada}">600</span>cc
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted">Tipo</label>
+                                <div class="fs-6" th:text="${moto.modelo.tipo}">Naked</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Informações do Pátio -->
+                <div class="card mb-4" th:if="${moto.patio != null}">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-warehouse me-2"></i>Localização - Pátio
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted">Nome do Pátio</label>
+                                <div class="fs-6" th:text="${moto.patio.nomePatio}">Pátio Central SP</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted">Localização</label>
+                                <div class="fs-6" th:text="${moto.patio.localizacaoPatio}">São Paulo - Centro</div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted">Área Total</label>
+                                <div class="fs-6">
+                                    <span th:text="${moto.patio.areaTotal}">1500.50</span> m²
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted">Capacidade Máxima</label>
+                                <div class="fs-6">
+                                    <span th:text="${moto.patio.capacidadeMaxima}">50</span> motos
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar - Informações Adicionais -->
+            <div class="col-lg-4">
+                <!-- Sensor IoT -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-satellite-dish me-2"></i>Sensor IoT
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div th:if="${moto.sensorIot != null}">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Tipo de Sensor</label>
+                                <div>
+                                    <span class="badge bg-info" th:text="${moto.sensorIot.tipoSensor}">GPS</span>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Nível da Bateria</label>
+                                <div class="progress mb-2">
+                                    <div class="progress-bar" 
+                                         th:classappend="${moto.sensorIot.bateriaPercentual < 20 ? 'bg-danger' : (moto.sensorIot.bateriaPercentual < 50 ? 'bg-warning' : 'bg-success')}"
+                                         th:style="'width: ' + ${moto.sensorIot.bateriaPercentual} + '%'">
+                                    </div>
+                                </div>
+                                <small th:text="${moto.sensorIot.bateriaPercentual} + '%'">85%</small>
+                            </div>
+                            <div class="mb-3" th:if="${moto.sensorIot.dataTransmissao != null}">
+                                <label class="form-label text-muted">Última Transmissão</label>
+                                <div class="fs-6" th:text="${#temporals.format(moto.sensorIot.dataTransmissao, 'dd/MM/yyyy')}">
+                                    01/01/2024
+                                </div>
+                            </div>
+                        </div>
+                        <div th:if="${moto.sensorIot == null}" class="text-center py-3">
+                            <i class="fas fa-times-circle fa-2x text-muted mb-2"></i>
+                            <p class="text-muted mb-0">Nenhum sensor associado</p>
+                            <small class="text-muted">Esta moto não possui sensor IoT</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ações Rápidas -->
+                <div class="card mb-4" sec:authorize="hasAnyRole('ADMIN', 'OPERADOR')">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-bolt me-2"></i>Ações Rápidas
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a th:href="@{/motos/{id}/editar(id=${moto.idMoto})}" class="btn btn-outline-warning">
+                                <i class="fas fa-edit me-2"></i>Editar Dados
+                            </a>
+                            <a th:href="@{/historico/moto/{id}(id=${moto.idMoto})}" class="btn btn-outline-info">
+                                <i class="fas fa-map-marker-alt me-2"></i>Ver Histórico
+                            </a>
+                            <a th:href="@{/alertas/moto/{id}(id=${moto.idMoto})}" class="btn btn-outline-warning">
+                                <i class="fas fa-bell me-2"></i>Ver Alertas
+                            </a>
+                            <button type="button" class="btn btn-outline-danger" 
+                                    sec:authorize="hasRole('ADMIN')"
+                                    th:onclick="'confirmarExclusao(' + ${moto.idMoto} + ', \'' + ${moto.placa} + '\')'">
+                                <i class="fas fa-trash me-2"></i>Excluir Moto
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Informações do Sistema -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-info me-2"></i>Informações do Sistema
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <small class="text-muted">
+                            <div><strong>ID:</strong> <span th:text="${moto.idMoto}">1</span></div>
+                            <div><strong>Criado em:</strong> <span th:text="${#temporals.format(moto.dataAtualizacao, 'dd/MM/yyyy HH:mm')}">01/01/2024 00:00</span></div>
+                            <div><strong>Modelo ID:</strong> <span th:text="${moto.modelo != null ? moto.modelo.idModelo : 'N/A'}">1</span></div>
+                            <div><strong>Pátio ID:</strong> <span th:text="${moto.patio != null ? moto.patio.idPatio : 'N/A'}">1</span></div>
+                            <div><strong>Sensor ID:</strong> <span th:text="${moto.sensorIot != null ? moto.sensorIot.idSensorIot : 'N/A'}">1</span></div>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal de Confirmação de Exclusão -->
+        <div class="modal fade" id="modalExclusao" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-exclamation-triangle text-danger me-2"></i>
+                            Confirmar Exclusão
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Tem certeza que deseja excluir a moto <strong id="placaExclusao"></strong>?</p>
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Atenção:</strong> Esta ação não pode ser desfeita e removerá todos os dados relacionados.
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-2"></i>Cancelar
+                        </button>
+                        <form id="formExclusao" method="post" style="display: inline;">
+                            <input type="hidden" name="_method" value="DELETE">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash me-2"></i>Excluir Moto
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts específicos da página -->
+    <div layout:fragment="scripts">
+        <script>
+            function confirmarExclusao(id, placa) {
+                document.getElementById('placaExclusao').textContent = placa;
+                document.getElementById('formExclusao').action = '/motos/' + id;
+                new bootstrap.Modal(document.getElementById('modalExclusao')).show();
+            }
+        </script>
+    </div>
+</body>
+</html>

@@ -1,0 +1,46 @@
+<div th:fragment="footer"
+     xmlns:th="http://www.thymeleaf.org"
+     xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+    <footer class="footer mt-auto py-3 bg-light">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <span class="text-muted">
+                        © 2024 <strong>Mottu</strong> - Sistema de Gerenciamento de Motos
+                    </span>
+                </div>
+                <div class="col-md-6 text-end">
+                    <small class="text-muted">
+                        Desenvolvido com
+                        <i class="fas fa-heart text-danger"></i>
+                        usando Spring Boot + Thymeleaf
+                    </small>
+                </div>
+            </div>
+
+            <!-- Informações adicionais -->
+            <div class="row mt-2">
+                <div class="col-12">
+                    <small class="text-muted d-flex justify-content-between">
+                        <span>
+                            <i class="fas fa-database me-1"></i>
+                            Conectado ao Oracle Database
+                        </span>
+                        <span>
+                            <i class="fas fa-shield-alt me-1"></i>
+                            Spring Security Ativo
+                        </span>
+                        <span>
+                            <i class="fas fa-code-branch me-1"></i>
+                            Flyway v.1.0.0
+                        </span>
+                        <span>
+                            Última atualização:
+                            <span th:text="${#temporals.format(#temporals.createNow(), 'dd/MM/yyyy HH:mm')}">01/01/2024 00:00</span>
+                        </span>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </footer>
+</div>

@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="pt-br" 
+      xmlns:th="http://www.thymeleaf.org" 
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" 
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout}">
+<head>
+    <title th:text="${patio.idPatio != null ? 'Editar Pátio - ' + patio.nomePatio : 'Novo Pátio'} + ' - Mottu'">Novo Pátio - Mottu</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 mb-1">
+                    <i class="fas fa-warehouse me-2 text-primary"></i>
+                    <span th:text="${patio.idPatio != null ? 'Editar Pátio' : 'Novo Pátio'}">Novo Pátio</span>
+                </h1>
+                <p class="text-muted mb-0">
+                    <span th:if="${patio.idPatio != null}">Editando dados do pátio <strong th:text="${patio.nomePatio}">Pátio Central SP</strong></span>
+                    <span th:unless="${patio.idPatio != null}">Cadastrar um novo pátio de estacionamento</span>
+                </p>
+            </div>
+            <div>
+                <a th:href="@{/patios}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Voltar
+                </a>
+            </div>
+        </div>
+
+        <!-- Formulário -->
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-body">
+                        <form th:action="${patio.idPatio != null ? '/patios/' + patio.idPatio : '/patios'}" 
+                              th:method="${patio.idPatio != null ? 'post' : 'post'}" 
+                              th:object="${patio}" 
+                              novalidate 
+                              data-validate>
+                            <!-- CSRF token (Spring Security) -->
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                            <!-- Hidden field para ID (caso seja edição) -->
+                            <input type="hidden" th:field="*{idPatio}">
+                            
+                            <!-- Dados Básicos -->
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <h5 class="card-title border-bottom pb-2">
+                                        <i class="fas fa-info-circle me-2"></i>Informações Básicas
+                                    </h5>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <!-- Nome do Pátio -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="nomePatio" class="form-label">
+                                        <i class="fas fa-warehouse me-1"></i>Nome do Pátio *
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           th:field="*{nomePatio}" 
+                                           id="nomePatio" 
+                                           placeholder="Pátio Central SP"
+                                           maxlength="50"
+                                           required
+                                           th:classappend="${#fields.hasErrors('nomePatio')} ? 'is-invalid'">
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('nomePatio')}" th:errors="*{nomePatio}">
+                                        Erro no nome do pátio
+                                    </div>
+                                    <div class="form-text">Nome único para identificação do pátio</div>
+                                </div>
+                                
+                                <!-- Localização -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="localizacaoPatio" class="form-label">
+                                        <i class="fas fa-map-marker-alt me-1"></i>Localização *
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           th:field="*{localizacaoPatio}" 
+                                           id="localizacaoPatio" 
+                                           placeholder="São Paulo - Centro"
+                                           maxlength="50"
+                                           list="localizacoes-sugestoes"
+                                           required
+                                           th:classappend="${#fields.hasErrors('localizacaoPatio')} ? 'is-invalid'">
+                                    <datalist id="localizacoes-sugestoes">
+                                        <option value="São Paulo - Centro">
+                                        <option value="São Paulo - Zona Norte">
+                                        <option value="São Paulo - Zona Sul">
+                                        <option value="Rio de Janeiro - Centro">
+                                        <option value="Rio de Janeiro - Zona Norte">
+                                        <option value="Belo Horizonte - Centro">
+                                        <option value="Brasília - Asa Norte">
+                                    </datalist>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('localizacaoPatio')}" th:errors="*{localizacaoPatio}">
+                                        Erro na localização
+                                    </div>
+                                    <div class="form-text">Cidade e região onde está localizado</div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <!-- Área Total -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="areaTotal" class="form-label">
+                                        <i class="fas fa-expand me-1"></i>Área Total (m²) *
+                                    </label>
+                                    <input type="number" 
+                                           class="form-control" 
+                                           th:field="*{areaTotal}" 
+                                           id="areaTotal" 
+                                           placeholder="1500.50"
+                                           step="0.01"
+                                           min="100.00"
+                                           max="999999.99"
+                                           required
+                                           th:classappend="${#fields.hasErrors('areaTotal')} ? 'is-invalid'">
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('areaTotal')}" th:errors="*{areaTotal}">
+                                        Erro na área total
+                                    </div>
+                                    <div class="form-text">Área total do pátio em metros quadrados</div>
+                                </div>
+                                
+                                <!-- Capacidade Máxima -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="capacidadeMaxima" class="form-label">
+                                        <i class="fas fa-motorcycle me-1"></i>Capacidade Máxima *
+                                    </label>
+                                    <input type="number" 
+                                           class="form-control" 
+                                           th:field="*{capacidadeMaxima}" 
+                                           id="capacidadeMaxima" 
+                                           placeholder="50"
+                                           min="1"
+                                           max="9999"
+                                           required
+                                           th:classappend="${#fields.hasErrors('capacidadeMaxima')} ? 'is-invalid'">
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('capacidadeMaxima')}" th:errors="*{capacidadeMaxima}">
+                                        Erro na capacidade máxima
+                                    </div>
+                                    <div class="form-text">Número máximo de motos que o pátio comporta</div>
+                                </div>
+                            </div>
+                            
+                            <!-- Calculadora de Densidade -->
+                            <div class="row mb-4 mt-4">
+                                <div class="col-12">
+                                    <h5 class="card-title border-bottom pb-2">
+                                        <i class="fas fa-calculator me-2"></i>Análise de Eficiência
+                                    </h5>
+                                    <div class="card bg-light">
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-3 mb-3">
+                                                    <label class="form-label text-muted">Área por Moto</label>
+                                                    <div class="fs-5 text-info" id="area-por-moto">0 m²</div>
+                                                </div>
+                                                <div class="col-md-3 mb-3">
+                                                    <label class="form-label text-muted">Densidade</label>
+                                                    <div class="fs-6" id="densidade">0 motos/m²</div>
+                                                </div>
+                                                <div class="col-md-3 mb-3">
+                                                    <label class="form-label text-muted">Classificação</label>
+                                                    <div>
+                                                        <span class="badge fs-6" id="classificacao-badge">-</span>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-3 mb-3">
+                                                    <label class="form-label text-muted">Eficiência</label>
+                                                    <div class="progress" style="height: 20px;">
+                                                        <div id="barra-eficiencia" class="progress-bar" style="width: 0%">0%</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Simulador de Cenários -->
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <h5 class="card-title border-bottom pb-2">
+                                        <i class="fas fa-chart-line me-2"></i>Simulador de Cenários
+                                    </h5>
+                                    <div class="card bg-light">
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-4 text-center">
+                                                    <div class="border rounded p-3 mb-2" style="background-color: rgba(40, 167, 69, 0.1);">
+                                                        <h6 class="text-success">50% Ocupação</h6>
+                                                        <div id="cenario-50" class="fs-5">0 motos</div>
+                                                        <small class="text-muted">Cenário Normal</small>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4 text-center">
+                                                    <div class="border rounded p-3 mb-2" style="background-color: rgba(255, 193, 7, 0.1);">
+                                                        <h6 class="text-warning">80% Ocupação</h6>
+                                                        <div id="cenario-80" class="fs-5">0 motos</div>
+                                                        <small class="text-muted">Cenário Alto</small>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4 text-center">
+                                                    <div class="border rounded p-3 mb-2" style="background-color: rgba(220, 53, 69, 0.1);">
+                                                        <h6 class="text-danger">100% Ocupação</h6>
+                                                        <div id="cenario-100" class="fs-5">0 motos</div>
+                                                        <small class="text-muted">Cenário Máximo</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Prévia do Pátio -->
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <h5 class="card-title border-bottom pb-2">
+                                        <i class="fas fa-eye me-2"></i>Prévia do Pátio
+                                    </h5>
+                                    <div class="card bg-light">
+                                        <div class="card-body">
+                                            <div class="row align-items-center">
+                                                <div class="col-md-2 text-center">
+                                                    <i class="fas fa-warehouse fa-3x text-primary"></i>
+                                                </div>
+                                                <div class="col-md-10">
+                                                    <h6 class="card-title mb-1" id="preview-nome">Nome do Pátio</h6>
+                                                    <p class="card-text mb-2">
+                                                        <i class="fas fa-map-marker-alt me-1 text-danger"></i>
+                                                        <span id="preview-localizacao">Localização</span>
+                                                    </p>
+                                                    <p class="card-text mb-0">
+                                                        <span class="badge bg-info me-2">
+                                                            <i class="fas fa-expand me-1"></i>
+                                                            <span id="preview-area">0</span> m²
+                                                        </span>
+                                                        <span class="badge bg-success">
+                                                            <i class="fas fa-motorcycle me-1"></i>
+                                                            <span id="preview-capacidade">0</span> vagas
+                                                        </span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Botões -->
+                            <div class="row mt-4">
+                                <div class="col-12">
+                                    <hr>
+                                    <div class="d-flex justify-content-between">
+                                        <a th:href="@{/patios}" class="btn btn-secondary">
+                                            <i class="fas fa-times me-2"></i>Cancelar
+                                        </a>
+                                        <div>
+                                            <button type="button" class="btn btn-outline-primary me-2" onclick="limparFormulario()">
+                                                <i class="fas fa-eraser me-2"></i>Limpar
+                                            </button>
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="fas fa-save me-2"></i>
+                                                <span th:text="${patio.idPatio != null ? 'Atualizar Pátio' : 'Cadastrar Pátio'}">Cadastrar Pátio</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts específicos da página -->
+    <div layout:fragment="scripts">
+        <script>
+            // Atualizar cálculos, prévia e simulações em tempo real
+            function atualizarCalculos() {
+                const nome = document.getElementById('nomePatio').value || 'Nome do Pátio';
+                const localizacao = document.getElementById('localizacaoPatio').value || 'Localização';
+                const area = parseFloat(document.getElementById('areaTotal').value) || 0;
+                const capacidade = parseInt(document.getElementById('capacidadeMaxima').value) || 0;
+                
+                // Atualizar prévia
+                document.getElementById('preview-nome').textContent = nome;
+                document.getElementById('preview-localizacao').textContent = localizacao;
+                document.getElementById('preview-area').textContent = area.toFixed(1);
+                document.getElementById('preview-capacidade').textContent = capacidade;
+                
+                // Calcular métricas
+                if (area > 0 && capacidade > 0) {
+                    const areaPorMoto = (area / capacidade).toFixed(2);
+                    const densidade = (capacidade / area).toFixed(4);
+                    
+                    document.getElementById('area-por-moto').textContent = areaPorMoto + ' m²';
+                    document.getElementById('densidade').textContent = densidade + ' motos/m²';
+                    
+                    // Classificar eficiência
+                    const badge = document.getElementById('classificacao-badge');
+                    const barra = document.getElementById('barra-eficiencia');
+                    let eficiencia = 0;
+                    
+                    if (parseFloat(areaPorMoto) >= 30) {
+                        badge.textContent = 'Espaçoso';
+                        badge.className = 'badge fs-6 bg-success';
+                        eficiencia = 60;
+                    } else if (parseFloat(areaPorMoto) >= 20) {
+                        badge.textContent = 'Adequado';
+                        badge.className = 'badge fs-6 bg-primary';
+                        eficiencia = 80;
+                    } else if (parseFloat(areaPorMoto) >= 15) {
+                        badge.textContent = 'Compacto';
+                        badge.className = 'badge fs-6 bg-warning';
+                        eficiencia = 90;
+                    } else if (parseFloat(areaPorMoto) >= 10) {
+                        badge.textContent = 'Apertado';
+                        badge.className = 'badge fs-6 bg-danger';
+                        eficiencia = 95;
+                    } else {
+                        badge.textContent = 'Muito Apertado';
+                        badge.className = 'badge fs-6 bg-dark';
+                        eficiencia = 100;
+                    }
+                    
+                    // Atualizar barra de eficiência
+                    barra.style.width = eficiencia + '%';
+                    barra.textContent = eficiencia + '%';
+                    barra.className = 'progress-bar ';
+                    if (eficiencia >= 90) {
+                        barra.className += 'bg-success';
+                    } else if (eficiencia >= 70) {
+                        barra.className += 'bg-warning';
+                    } else {
+                        barra.className += 'bg-danger';
+                    }
+                    
+                    // Simulador de cenários
+                    document.getElementById('cenario-50').textContent = Math.round(capacidade * 0.5) + ' motos';
+                    document.getElementById('cenario-80').textContent = Math.round(capacidade * 0.8) + ' motos';
+                    document.getElementById('cenario-100').textContent = capacidade + ' motos';
+                    
+                } else {
+                    document.getElementById('area-por-moto').textContent = '0 m²';
+                    document.getElementById('densidade').textContent = '0 motos/m²';
+                    document.getElementById('classificacao-badge').textContent = '-';
+                    document.getElementById('classificacao-badge').className = 'badge fs-6 bg-secondary';
+                    
+                    // Reset barra
+                    const barra = document.getElementById('barra-eficiencia');
+                    barra.style.width = '0%';
+                    barra.textContent = '0%';
+                    barra.className = 'progress-bar bg-secondary';
+                    
+                    // Reset cenários
+                    document.getElementById('cenario-50').textContent = '0 motos';
+                    document.getElementById('cenario-80').textContent = '0 motos';
+                    document.getElementById('cenario-100').textContent = '0 motos';
+                }
+            }
+            
+            // Event listeners para atualização em tempo real
+            document.getElementById('nomePatio').addEventListener('input', atualizarCalculos);
+            document.getElementById('localizacaoPatio').addEventListener('input', atualizarCalculos);
+            document.getElementById('areaTotal').addEventListener('input', atualizarCalculos);
+            document.getElementById('capacidadeMaxima').addEventListener('input', atualizarCalculos);
+            
+            // Inicializar cálculos se for edição
+            document.addEventListener('DOMContentLoaded', atualizarCalculos);
+            
+            // Função para limpar formulário
+            function limparFormulario() {
+                if (confirm('Tem certeza que deseja limpar todos os campos?')) {
+                    document.querySelector('form').reset();
+                    document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+                    document.querySelectorAll('.is-valid').forEach(el => el.classList.remove('is-valid'));
+                    atualizarCalculos();
+                }
+            }
+            
+            // Validações personalizadas
+            document.getElementById('areaTotal').addEventListener('input', function(e) {
+                const value = parseFloat(e.target.value);
+                if (value && value < 100) {
+                    e.target.setCustomValidity('Área muito pequena para um pátio funcional');
+                } else {
+                    e.target.setCustomValidity('');
+                }
+            });
+            
+            document.getElementById('capacidadeMaxima').addEventListener('input', function(e) {
+                const area = parseFloat(document.getElementById('areaTotal').value);
+                const capacidade = parseInt(e.target.value);
+                
+                if (area > 0 && capacidade > 0) {
+                    const areaPorMoto = area / capacidade;
+                    if (areaPorMoto < 5) {
+                        e.target.setCustomValidity('Capacidade muito alta para a área disponível (mínimo 5m² por moto)');
+                    } else {
+                        e.target.setCustomValidity('');
+                    }
+                }
+            });
+        </script>
+    </div>
+</body>
+</html>

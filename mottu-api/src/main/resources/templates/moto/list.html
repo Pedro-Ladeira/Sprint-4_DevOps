@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout}">
+<head>
+    <title>Gerenciamento de Motos - Mottu</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">
+                <i class="fas fa-motorcycle me-2 text-primary"></i>
+                Gerenciamento de Motos
+            </h1>
+            <p class="text-muted mb-0">Lista e controle de todas as motos do sistema</p>
+        </div>
+        <div>
+            <a th:href="@{/motos/novo}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Nova Moto
+            </a>
+        </div>
+    </div>
+    <!-- Filtros e Busca -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form th:action="@{/motos}" method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label for="placa" class="form-label">Buscar por Placa</label>
+                    <input type="text" class="form-control" id="placa" name="placa" th:value="${placa}" placeholder="ABC1234">
+                </div>
+                <div class="col-md-3">
+                    <label for="status" class="form-label">Status</label>
+                    <select class="form-select" id="status" name="status">
+                        <option value="">Todos os Status</option>
+                        <option value="DISPONIVEL" th:selected="${status == 'DISPONIVEL'}">Disponível</option>
+                        <option value="ALUGADA" th:selected="${status == 'ALUGADA'}">Alugada</option>
+                        <option value="MANUTENCAO" th:selected="${status == 'MANUTENCAO'}">Em Manutenção</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="patioId" class="form-label">Pátio</label>
+                    <select class="form-select" id="patioId" name="patioId">
+                        <option value="">Todos os Pátios</option>
+                        <option th:each="patio : ${patios}" th:value="${patio.idPatio}" th:text="${patio.nomePatio}"></option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-outline-primary w-100">Filtrar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- Tabela de Motos -->
+    <div class="card">
+        <div class="card-body p-0">
+            <div th:if="${#lists.isEmpty(motos)}" class="p-4 text-center text-muted">
+                Nenhuma moto cadastrada.
+            </div>
+            <div th:if="${!#lists.isEmpty(motos)}">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Placa</th>
+                            <th>Status</th>
+                            <th>Pátio</th>
+                            <th>Modelo</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="moto : ${motos}">
+                            <td th:text="${moto.placa}">ABC1234</td>
+                            <td th:text="${moto.status}">DISPONIVEL</td>
+                            <td th:text="${moto.patio != null ? moto.patio.nomePatio : '-'}">Pátio</td>
+                            <td th:text="${moto.modelo != null ? moto.modelo.nomeModelo : '-'}">Modelo</td>
+                            <td>
+                                <a th:href="@{/motos/{id}(id=${moto.idMoto})}" class="btn btn-sm btn-info me-1">Ver</a>
+                                <a th:href="@{/motos/editar/{id}(id=${moto.idMoto})}" class="btn btn-sm btn-warning me-1">Editar</a>
+                                <form th:action="@{/motos/deletar/{id}(id=${moto.idMoto})}" method="post" style="display:inline" th:onsubmit="return confirm('Tem certeza que deseja deletar esta moto?');">
+                                    <!-- Removido CSRF para ambiente sem segurança -->
+                                    <button type="submit" class="btn btn-sm btn-danger">Excluir</button>
+                                </form>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

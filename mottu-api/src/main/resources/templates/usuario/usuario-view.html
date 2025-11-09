@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="pt-br" 
+      xmlns:th="http://www.thymeleaf.org" 
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" 
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout}">
+<head>
+    <title th:text="'Usuário ' + ${usuario.nome} + ' - Mottu'">Usuário - Mottu</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 mb-1">
+                    <i class="fas fa-user me-2 text-primary"></i>
+                    Perfil Completo do Usuário
+                </h1>
+                <p class="text-muted mb-0">
+                    Informações detalhadas e permissões do usuário <strong th:text="${usuario.nome}">Nome do Usuário</strong>
+                </p>
+            </div>
+            <div>
+                <a th:href="@{/usuarios}" class="btn btn-outline-secondary me-2">
+                    <i class="fas fa-arrow-left me-2"></i>Voltar
+                </a>
+                <a th:href="@{/usuarios/{id}/editar(id=${usuario.idUsuario})}" 
+                   class="btn btn-warning"
+                   sec:authorize="hasRole('ADMIN')">
+                    <i class="fas fa-edit me-2"></i>Editar
+                </a>
+            </div>
+        </div>
+
+        <!-- Card de Status Principal -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card" th:classappend="${usuario.ativo ? 'border-success' : 'border-danger'}">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-2 text-center">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center text-white mx-auto mb-2"
+                                     th:classappend="${usuario.ativo ? 'bg-primary' : 'bg-secondary'}"
+                                     style="width: 80px; height: 80px;">
+                                    <span class="fs-2" th:text="${#strings.substring(usuario.nome, 0, 1).toUpperCase()}">U</span>
+                                </div>
+                                <span class="badge fs-6" 
+                                      th:classappend="${usuario.ativo ? 'bg-success' : 'bg-danger'}">
+                                    <i th:class="${usuario.ativo ? 'fas fa-check-circle' : 'fas fa-times-circle'}" class="me-1"></i>
+                                    <span th:text="${usuario.ativo ? 'Conta Ativa' : 'Conta Inativa'}">Status</span>
+                                </span>
+                            </div>
+                            <div class="col-md-10">
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <h3 class="card-title mb-1" th:text="${usuario.nome}">Nome do Usuário</h3>
+                                        <p class="text-muted mb-2">
+                                            <i class="fas fa-envelope me-2"></i>
+                                            <span th:text="${usuario.email}">usuario@mottu.com</span>
+                                        </p>
+                                        <div class="d-flex align-items-center">
+                                            <span class="me-3" th:switch="${usuario.perfil}">
+                                                <span th:case="'ADMIN'" class="badge bg-danger fs-6">
+                                                    <i class="fas fa-user-shield me-1"></i>Administrador
+                                                </span>
+                                                <span th:case="'OPERADOR'" class="badge bg-primary fs-6">
+                                                    <i class="fas fa-user-cog me-1"></i>Operador
+                                                </span>
+                                                <span th:case="'MANUTENCAO'" class="badge bg-warning fs-6">
+                                                    <i class="fas fa-user-tag me-1"></i>Manutenção
+                                                </span>
+                                                <span th:case="*" class="badge bg-secondary fs-6" th:text="${usuario.perfil}">
+                                                    Perfil
+                                                </span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 text-end">
+                                        <div class="mb-3">
+                                            <small class="text-muted">ID do Usuário</small>
+                                            <div class="fs-5 fw-bold" th:text="${usuario.idUsuario}">1</div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <small class="text-muted">Desde</small>
+                                            <div th:text="${#temporals.format(#temporals.createNow(), 'dd/MM/yyyy')}">01/01/2024</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Informações Principais -->
+            <div class="col-lg-8">
+                <!-- Permissões Detalhadas -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-shield-alt me-2"></i>Matriz de Permissões do Sistema
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <h6 class="text-primary">Funcionalidades Permitidas</h6>
+                                <div th:switch="${usuario.perfil}">
+                                    <div th:case="'ADMIN'">
+                                        <ul class="list-group list-group-flush">
+                                            <li class="list-group-item d-flex align-items-center border-0 px-0">
+                                                <i class="fas fa-check-circle text-success me-3"></i>
+                                                <div>
+                                                    <div class="fw-bold">Gerenciar Usuários</div>
+                                                    <small class="text-muted">Criar, editar, desativar usuários</small>
+                                                </div>
+                                            </li>
+                                            <li class="list-group-item d-flex align-items-center border-0 px-0">
+                                                <i class="fas fa-check-circle text-success me-3"></i>
+                                                <div>
+                                                    <div class="fw-bold">CRUD Completo de Motos</div>
+                                                    <small class="text-muted">Todas as operações com motos</small>
+                                                </div>
+                                            </li>
+                                            <li class="list-group-item d-flex align-items-center border-0 px-0">
+                                                <i class="fas fa-check-circle text-success me-3"></i>
+                                                <div>
+                                                    <div class="fw-bold">Gerenciar Modelos e Pátios</div>
+                                                    <small class="text-muted">Configurar estrutura do sistema</small>
+                                                </div>
+                                            </li>
+                                            <li class="list-group-item d-flex align-items-center border-0 px-0">
+                                                <i class="fas fa-check-circle text-success me-3"></i>
+                                                <div>
+                                                    <div class="fw-bold">Configurações Avançadas</div>
+                                                    <small class="text-muted">Configurações globais do sistema</small>
+                                                </div>
+                                            </li>
+                                            <li class="list-group-item d-flex align-items-center border-0 px-0">
+                                                <i class="fas fa-check-circle text-success me-3"></i>
+                                                <div>
+                                                    <div class="fw-bold">Dashboard e Relatórios</div>
+                                                    <small class="text-muted">Acesso a todos os dados</small>
+                                                </div>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <div th:case="'OPERADOR'">
+                                        <ul class="list-group list-group-flush">
+                                            <li class="list-group-item d-flex align-items-center border-0 px-0">
+                                                <i class="fas fa-check-circle text-success me-3"></i>
+                                                <div>
+                                                    <div class="fw-bold">CRUD de Motos</div>
+                                                    <small class="text-muted">Gerenciar frota de motos</small>
+                                                </div>
+                                            </li>
+                                            <li class="list-group-item d-flex align-items-center border-0 px-0">
+                                                <i class="fas fa-check-circle text-success me-3"></i>
+                                                <div>
+                                                    <div class="fw-bold">Visualizar Dados</div>
+                                                    <small class="text-muted">Consultar modelos e pátios</small>
+                                                </div>
+                                            </li>
+                                            <li class="list-group-item d-flex align-items-center border-0 px-0">
+                                                <i class="fas fa-check-circle text-success me-3"></i>
+                                                <div>
+                                                    <div class="fw-bold">Gerenciar Sensores</div>
+                                                    <small class="text-muted">Monitorar dispositivos IoT</small>
+                                                </div>
+                                            </li>
+                                            <li class="list-group-item d-flex align-items-center border-0 px-0">
+                                                <i class="fas fa-times-circle text-danger me-3"></i>
+                                                <div>
+                                                    <div class="fw-bold text-muted">Gerenciar Usuários</div>
+                                                    <small class="text-muted">Sem permissão</small>
+                                                </div>
+                                            </li>
+                                            <li class="list-group-item d-flex align-items-center border-0 px-0">
+                                                <i class="fas fa-times-circle text-danger me-3"></i>
+                                                <div>
+                                                    <div class="fw-bold text-muted">Configurações</div>
+                                                    <small class="text-muted">Sem permissão</small>
+                                                </div>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <div th:case="'MANUTENCAO'">
+                                        <ul class="list-group list-group-flush">
+                                            <li class="list-group-item d-flex align-items-center border-0 px-0">
+                                                <i class="fas fa-eye text-info me-3"></i>
+                                                <div>
+                                                    <div class="fw-bold">Visualizar Informações</div>
+                                                    <small class="text-muted">Consulta somente leitura</small>
+                                                </div>
+                                            </li>
+                                            <li class="list-group-item d-flex align-items-center border-0 px-0">
+                                                <i class="fas fa-eye text-info me-3"></i>
+                                                <div>
+                                                    <div class="fw-bold">Dashboard Básico</div>
+                                                    <small class="text-muted">Métricas essenciais</small>
+                                                </div>
+                                            </li>
+                                            <li class="list-group-item d-flex align-items-center border-0 px-0">
+                                                <i class="fas fa-eye text-info me-3"></i>
+                                                <div>
+                                                    <div class="fw-bold">Alertas e Histórico</div>
+                                                    <small class="text-muted">Consultar registros</small>
+                                                </div>
+                                            </li>
+                                            <li class="list-group-item d-flex align-items-center border-0 px-0">
+                                                <i class="fas fa-times-circle text-danger me-3"></i>
+                                                <div>
+                                                    <div class="fw-bold text-muted">Editar Dados</div>
+                                                    <small class="text-muted">Sem permissão</small>
+                                                </div>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Tabela de Acesso às Páginas -->
+                            <div class="col-md-6">
+                                <h6 class="text-primary">Matriz de Acesso às Páginas</h6>
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Página</th>
+                                                <th class="text-center">Acesso</th>
+                                                <th class="text-center">Nível</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td><i class="fas fa-tachometer-alt me-2"></i>Dashboard</td>
+                                                <td class="text-center"><i class="fas fa-check text-success"></i></td>
+                                                <td class="text-center">
+                                                    <span th:switch="${usuario.perfil}">
+                                                        <span th:case="'ADMIN'" class="badge bg-success">Completo</span>
+                                                        <span th:case="'OPERADOR'" class="badge bg-primary">Operacional</span>
+                                                        <span th:case="*" class="badge bg-info">Básico</span>
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td><i class="fas fa-motorcycle me-2"></i>Motos</td>
+                                                <td class="text-center"><i class="fas fa-check text-success"></i></td>
+                                                <td class="text-center">
+                                                    <span th:switch="${usuario.perfil}">
+                                                        <span th:case="'ADMIN'" class="badge bg-success">CRUD</span>
+                                                        <span th:case="'OPERADOR'" class="badge bg-primary">CRUD</span>
+                                                        <span th:case="*" class="badge bg-info">Leitura</span>
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td><i class="fas fa-cogs me-2"></i>Modelos</td>
+                                                <td class="text-center">
+                                                    <i th:class="${usuario.perfil == 'MANUTENCAO' ? 'fas fa-eye text-warning' : 'fas fa-check text-success'}"></i>
+                                                </td>
+                                                <td class="text-center">
+                                                    <span th:switch="${usuario.perfil}">
+                                                        <span th:case="'ADMIN'" class="badge bg-success">CRUD</span>
+                                                        <span th:case="'OPERADOR'" class="badge bg-info">Leitura</span>
+                                                        <span th:case="*" class="badge bg-info">Leitura</span>
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td><i class="fas fa-warehouse me-2"></i>Pátios</td>
+                                                <td class="text-center">
+                                                    <i th:class="${usuario.perfil == 'MANUTENCAO' ? 'fas fa-eye text-warning' : 'fas fa-check text-success'}"></i>
+                                                </td>
+                                                <td class="text-center">
+                                                    <span th:switch="${usuario.perfil}">
+                                                        <span th:case="'ADMIN'" class="badge bg-success">CRUD</span>
+                                                        <span th:case="'OPERADOR'" class="badge bg-info">Leitura</span>
+                                                        <span th:case="*" class="badge bg-info">Leitura</span>
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td><i class="fas fa-users me-2"></i>Usuários</td>
+                                                <td class="text-center">
+                                                    <i th:class="${usuario.perfil == 'ADMIN' ? 'fas fa-check text-success' : 'fas fa-times text-danger'}"></i>
+                                                </td>
+                                                <td class="text-center">
+                                                    <span th:switch="${usuario.perfil}">
+                                                        <span th:case="'ADMIN'" class="badge bg-success">CRUD</span>
+                                                        <span th:case="*" class="badge bg-danger">Sem acesso</span>
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Histórico de Atividades -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-history me-2"></i>Histórico de Atividades Recentes
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="timeline">
+                            <div class="timeline-item">
+                                <div class="timeline-marker bg-success"></div>
+                                <div class="timeline-content">
+                                    <div class="d-flex justify-content-between">
+                                        <h6 class="timeline-title mb-1">Login Realizado</h6>
+                                        <small class="text-muted">Hoje, 14:30</small>
+                                    </div>
+                                    <p class="timeline-text text-muted mb-0">Acesso bem-sucedido ao sistema</p>
+                                </div>
+                            </div>
+                            <div class="timeline-item">
+                                <div class="timeline-marker bg-info"></div>
+                                <div class="timeline-content">
+                                    <div class="d-flex justify-content-between">
+                                        <h6 class="timeline-title mb-1">Dashboard Acessado</h6>
+                                        <small class="text-muted">Hoje, 14:31</small>
+                                    </div>
+                                    <p class="timeline-text text-muted mb-0">Visualizou página principal do sistema</p>
+                                </div>
+                            </div>
+                            <div class="timeline-item">
+                                <div class="timeline-marker bg-primary"></div>
+                                <div class="timeline-content">
+                                    <div class="d-flex justify-content-between">
+                                        <h6 class="timeline-title mb-1">Consulta de Motos</h6>
+                                        <small class="text-muted">Hoje, 14:35</small>
+                                    </div>
+                                    <p class="timeline-text text-muted mb-0">Acessou listagem de motos cadastradas</p>
+                                </div>
+                            </div>
+                            <div class="timeline-item">
+                                <div class="timeline-marker bg-warning"></div>
+                                <div class="timeline-content">
+                                    <div class="d-flex justify-content-between">
+                                        <h6 class="timeline-title mb-1">Perfil Atualizado</h6>
+                                        <small class="text-muted">Ontem, 16:45</small>
+                                    </div>
+                                    <p class="timeline-text text-muted mb-0">Dados do usuário foram atualizados pelo administrador</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar - Controles e Informações -->
+            <div class="col-lg-4">
+                <!-- Cartão de Identidade -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-id-card me-2"></i>Cartão de Identidade Digital
+                        </h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <div class="mb-3">
+                            <div class="rounded-circle d-flex align-items-center justify-content-center text-white mx-auto mb-3"
+                                 th:classappend="${usuario.ativo ? 'bg-primary' : 'bg-secondary'}"
+                                 style="width: 80px; height: 80px;">
+                                <span class="fs-2" th:text="${#strings.substring(usuario.nome, 0, 1).toUpperCase()}">U</span>
+                            </div>
+                            <h5 th:text="${usuario.nome}">Nome do Usuário</h5>
+                            <p class="text-muted mb-0" th:text="${usuario.email}">email@mottu.com</p>
+                            <div class="mt-2">
+                                <span class="badge fs-6 me-2" 
+                                      th:switch="${usuario.perfil}"
+                                      th:classappend="${usuario.perfil == 'ADMIN' ? 'bg-danger' : (usuario.perfil == 'OPERADOR' ? 'bg-primary' : 'bg-warning')}">
+                                    <span th:case="'ADMIN'"><i class="fas fa-user-shield me-1"></i>Administrador</span>
+                                    <span th:case="'OPERADOR'"><i class="fas fa-user-cog me-1"></i>Operador</span>
+                                    <span th:case="'MANUTENCAO'"><i class="fas fa-user-tag me-1"></i>Manutenção</span>
+                                    <span th:case="*" th:text="${usuario.perfil}">Perfil</span>
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <!-- Status da Conta -->
+                        <div class="alert" th:classappend="${usuario.ativo ? 'alert-success' : 'alert-danger'}">
+                            <div th:if="${usuario.ativo}">
+                                <i class="fas fa-check-circle me-2"></i>
+                                <strong>Conta Ativa</strong><br>
+                                <small>Usuário habilitado para acessar o sistema</small>
+                            </div>
+                            <div th:unless="${usuario.ativo}">
+                                <i class="fas fa-times-circle me-2"></i>
+                                <strong>Conta Inativa</strong><br>
+                                <small>Usuário não pode fazer login no sistema</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Estatísticas de Uso -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-chart-bar me-2"></i>Estatísticas de Uso
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-6 mb-3">
+                                <div class="border-end">
+                                    <h4 class="text-primary mb-0">24</h4>
+                                    <small class="text-muted">Dias Ativo</small>
+                                </div>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <h4 class="text-success mb-0">156</h4>
+                                <small class="text-muted">Total Logins</small>
+                            </div>
+                        </div>
+                        <div class="row text-center">
+                            <div class="col-6 mb-3">
+                                <div class="border-end">
+                                    <h4 class="text-info mb-0">12</h4>
+                                    <small class="text-muted">Ações Hoje</small>
+                                </div>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <h4 class="text-warning mb-0">3.2h</h4>
+                                <small class="text-muted">Tempo Online</small>
+                            </div>
+                        </div>
+                        
+                        <!-- Gráfico de Atividade Semanal -->
+                        <div class="mt-3">
+                            <h6 class="text-muted mb-2">Atividade esta semana:</h6>
+                            <div class="d-flex justify-content-between align-items-end" style="height: 60px;">
+                                <div class="bg-primary rounded-top" style="width: 12px; height: 40px;" title="Segunda"></div>
+                                <div class="bg-primary rounded-top" style="width: 12px; height: 60px;" title="Terça"></div>
+                                <div class="bg-primary rounded-top" style="width: 12px; height: 30px;" title="Quarta"></div>
+                                <div class="bg-primary rounded-top" style="width: 12px; height: 45px;" title="Quinta"></div>
+                                <div class="bg-primary rounded-top" style="width: 12px; height: 55px;" title="Sexta"></div>
+                                <div class="bg-secondary rounded-top" style="width: 12px; height: 10px;" title="Sábado"></div>
+                                <div class="bg-secondary rounded-top" style="width: 12px; height: 5px;" title="Domingo"></div>
+                            </div>
+                            <div class="d-flex justify-content-between mt-1">
+                                <small class="text-muted">S</small>
+                                <small class="text-muted">T</small>
+                                <small class="text-muted">Q</small>
+                                <small class="text-muted">Q</small>
+                                <small class="text-muted">S</small>
+                                <small class="text-muted">S</small>
+                                <small class="text-muted">D</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ações Rápidas -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-bolt me-2"></i>Ações Rápidas
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a th:href="@{/usuarios/{id}/editar(id=${usuario.idUsuario})}" class="btn btn-outline-warning">
+                                <i class="fas fa-edit me-2"></i>Editar Dados
+                            </a>
+                            
+                            <!-- Botão Ativar/Desativar -->
+                            <form th:action="@{/usuarios/{id}/ativar-desativar(id=${usuario.idUsuario})}" method="post">
+                                <input type="hidden" name="ativo" th:value="${!usuario.ativo}">
+                                <button type="submit" 
+                                        class="btn w-100"
+                                        th:classappend="${usuario.ativo ? 'btn-outline-warning' : 'btn-outline-success'}">
+                                    <i th:class="${usuario.ativo ? 'fas fa-user-slash' : 'fas fa-user-check'}" class="me-2"></i>
+                                    <span th:text="${usuario.ativo ? 'Desativar Conta' : 'Ativar Conta'}">Alterar Status</span>
+                                </button>
+                            </form>
+                            
+                            <button type="button" class="btn btn-outline-info" onclick="resetarSenha()">
+                                <i class="fas fa-key me-2"></i>Resetar Senha
+                            </button>
+                            
+                            <button type="button" class="btn btn-outline-secondary" onclick="enviarEmail()">
+                                <i class="fas fa-envelope me-2"></i>Enviar Email
+                            </button>
+                            
+                            <button type="button" class="btn btn-outline-danger" 
+                                    th:onclick="'confirmarExclusao(' + ${usuario.idUsuario} + ', \'' + ${usuario.nome} + '\')'">
+                                <i class="fas fa-trash me-2"></i>Excluir Usuário
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Informações do Sistema -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-info me-2"></i>Informações do Sistema
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <small class="text-muted">
+                            <div class="mb-2"><strong>ID:</strong> <span th:text="${usuario.idUsuario}">1</span></div>
+                            <div class="mb-2"><strong>Nome:</strong> <span th:text="${usuario.nome}">Nome</span></div>
+                            <div class="mb-2"><strong>Email:</strong> <span th:text="${usuario.email}">email@mottu.com</span></div>
+                            <div class="mb-2"><strong>Perfil:</strong> <span th:text="${usuario.perfil}">OPERADOR</span></div>
+                            <div class="mb-2"><strong>Status:</strong> <span th:text="${usuario.ativo ? 'Ativo' : 'Inativo'}">Ativo</span></div>
+                            <div class="mb-2"><strong>Criado em:</strong> <span th:text="${#temporals.format(#temporals.createNow(), 'dd/MM/yyyy')}">01/01/2024</span></div>
+                            <div><strong>Último login:</strong> Hoje às 14:30</div>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal de Confirmação de Exclusão -->
+        <div class="modal fade" id="modalExclusao" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-exclamation-triangle text-danger me-2"></i>
+                            Confirmar Exclusão
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Tem certeza que deseja excluir o usuário <strong id="nomeExclusao"></strong>?</p>
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Atenção:</strong> Esta ação não pode ser desfeita e o usuário perderá completamente o acesso ao sistema.
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-2"></i>Cancelar
+                        </button>
+                        <form id="formExclusao" method="post" style="display: inline;">
+                            <input type="hidden" name="_method" value="DELETE">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash me-2"></i>Excluir Usuário
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts específicos da página -->
+    <div layout:fragment="scripts">
+        <script>
+            function confirmarExclusao(id, nome) {
+                document.getElementById('nomeExclusao').textContent = nome;
+                document.getElementById('formExclusao').action = '/usuarios/' + id;
+                new bootstrap.Modal(document.getElementById('modalExclusao')).show();
+            }
+            
+            function resetarSenha() {
+                if (confirm('Deseja gerar uma nova senha temporária para este usuário?')) {
+                    // Aqui você implementaria a lógica de reset de senha
+                    alert('Nova senha enviada por email!');
+                }
+            }
+            
+            function enviarEmail() {
+                if (confirm('Deseja enviar um email para este usuário?')) {
+                    // Aqui você implementaria a lógica de envio de email
+                    alert('Email enviado com sucesso!');
+                }
+            }
+        </script>
+        
+        <style>
+            .timeline {
+                position: relative;
+                padding-left: 30px;
+            }
+            
+            .timeline::before {
+                content: '';
+                position: absolute;
+                left: 15px;
+                top: 0;
+                bottom: 0;
+                width: 2px;
+                background-color: #e9ecef;
+            }
+            
+            .timeline-item {
+                position: relative;
+                margin-bottom: 25px;
+            }
+            
+            .timeline-marker {
+                position: absolute;
+                left: -22px;
+                top: 5px;
+                width: 12px;
+                height: 12px;
+                border-radius: 50%;
+                border: 2px solid #fff;
+                box-shadow: 0 0 0 2px #e9ecef;
+            }
+            
+            .timeline-content {
+                background: #f8f9fa;
+                border-radius: 6px;
+                padding: 15px;
+                border-left: 3px solid #007bff;
+            }
+            
+            .timeline-title {
+                color: #495057;
+                font-size: 0.9rem;
+            }
+            
+            .timeline-text {
+                font-size: 0.85rem;
+            }
+        </style>
+    </div>
+</body>
+</html>

@@ -1,0 +1,238 @@
+                document.body.appendChild(container);
+            }
+            const el = document.createElement('div');
+            el.innerHTML = toastHtml;
+            container.appendChild(el);
+            const toast = new bootstrap.Toast(el.querySelector('.toast'));
+            toast.show();
+            el.querySelector('.toast').addEventListener('hidden.bs.toast', () => container.removeChild(el));
+        }
+<!DOCTYPE html>
+        document.addEventListener('DOMContentLoaded', renderizarTabela);
+    </script>
+</div>
+</body>
+</html>
+<body>
+<div layout:fragment="content">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">
+                <i class="fas fa-exclamation-triangle me-2 text-warning"></i>
+                Alertas do Sistema
+            </h1>
+            <p class="text-muted mb-0">Monitoramento de alertas críticos e de aviso</p>
+        </div>
+        <div>
+            <button class="btn btn-outline-secondary me-2" onclick="atualizarAlertas()">
+                <i class="fas fa-sync-alt me-1"></i>Atualizar
+            </button>
+            <button class="btn btn-outline-danger" onclick="limparAlertas()" sec:authorize="hasRole('ADMIN')">
+                <i class="fas fa-trash me-1"></i>Limpar Alertas
+            </button>
+        </div>
+    </div>
+
+    <!-- Cards de Resumo de Alertas -->
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6>Críticos</h6>
+                        <h3 id="total-criticos">0</h3>
+                    </div>
+                    <i class="fas fa-bolt fa-2x"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6>Avisos</h6>
+                        <h3 id="total-avisos">0</h3>
+                    </div>
+                    <i class="fas fa-exclamation fa-2x"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card bg-info text-white">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6>Usuários Impactados</h6>
+                        <h3 id="usuarios-impactados">0</h3>
+                    </div>
+                    <i class="fas fa-users fa-2x"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros de Alertas -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form id="filtroAlertas" class="row g-3">
+                <div class="col-md-3">
+                    <label for="nivelAlerta" class="form-label">Nível</label>
+                    <select class="form-select" id="nivelAlerta" name="nivelAlerta">
+                        <option value="">Todos</option>
+                        <option value="CRITICAL">Crítico</option>
+                        <option value="WARNING">Aviso</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="origem" class="form-label">Origem</label>
+                    <input type="text" class="form-control" id="origem" name="origem" placeholder="Ex: sensor, sistema">
+                </div>
+                <div class="col-md-3">
+                    <label for="usuarioAlerta" class="form-label">Usuário</label>
+                    <input type="text" class="form-control" id="usuarioAlerta" name="usuarioAlerta" placeholder="Nome do usuário">
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="button" class="btn btn-outline-primary me-2" onclick="filtrarAlertas()">
+                        <i class="fas fa-search me-1"></i>Filtrar
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" onclick="limparFiltros()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabela de Alertas -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Data/Hora</th>
+                            <th>Nível</th>
+                            <th>Origem</th>
+                            <th>Descrição</th>
+                            <th>Usuário</th>
+                            <th sec:authorize="hasRole('ADMIN')">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-alertas">
+                        <!-- Linhas dinâmicas via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Scripts -->
+<div layout:fragment="scripts">
+    <script>
+        // Simulação de dados
+        const alertas = [
+            { data: '2025-09-28 14:25', nivel: 'CRITICAL', origem: 'sensorIot', descricao: 'Sensor IOT-012 não responde', usuario: 'Sistema' },
+            { data: '2025-09-28 14:00', nivel: 'WARNING', origem: 'patio', descricao: 'Ocupação acima de 90% no Pátio Central SP', usuario: 'Sistema' },
+            { data: '2025-09-28 13:45', nivel: 'WARNING', origem: 'usuario', descricao: 'Falha de login para usuário Maria Silva', usuario: 'Maria Silva' }
+        ];
+
+        function renderizarTabela() {
+            const tbody = document.getElementById('tbody-alertas');
+            tbody.innerHTML = '';
+            let contCriticos = 0, contAvisos = 0;
+            const usuarios = new Set();
+
+            alertas.forEach(a => {
+                const tr = document.createElement('tr');
+
+                tr.innerHTML = `
+                    <td><small>${a.data}</small></td>
+                    <td><span class="badge bg-${a.nivel === 'CRITICAL' ? 'danger' : 'warning'}">${a.nivel}</span></td>
+                    <td>${a.origem}</td>
+                    <td>${a.descricao}</td>
+                    <td>${a.usuario}</td>
+                    <td sec:authorize="hasRole('ADMIN')">
+                        <button class="btn btn-sm btn-outline-danger me-1" onclick="removerAlerta('${a.data}', '${a.origem}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-info" onclick="detalharAlerta('${a.data}', '${a.origem}')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+
+                if(a.nivel === 'CRITICAL') contCriticos++;
+                if(a.nivel === 'WARNING') contAvisos++;
+                usuarios.add(a.usuario);
+            });
+
+            document.getElementById('total-criticos').textContent = contCriticos;
+            document.getElementById('total-avisos').textContent = contAvisos;
+            document.getElementById('usuarios-impactados').textContent = usuarios.size;
+        }
+
+        function filtrarAlertas() {
+            renderizarTabela();
+            showToast('Filtros aplicados', 'success');
+        }
+
+        function limparFiltros() {
+            document.getElementById('filtroAlertas').reset();
+            renderizarTabela();
+        }
+
+        function atualizarAlertas() {
+            showToast('Atualizando alertas...', 'info');
+            setTimeout(() => {
+                renderizarTabela();
+                showToast('Alertas atualizados', 'success');
+            }, 1000);
+        }
+
+        function limparAlertas() {
+            if(confirm('Apagar todos os alertas?')) {
+                alertas.length = 0;
+                renderizarTabela();
+                showToast('Alertas limpos', 'warning');
+            }
+        }
+
+        function removerAlerta(data, origem) {
+            const idx = alertas.findIndex(a => a.data === data && a.origem === origem);
+            if(idx >= 0 && confirm('Remover este alerta?')) {
+                alertas.splice(idx, 1);
+                renderizarTabela();
+                showToast('Alerta removido', 'warning');
+            }
+        }
+
+        function detalharAlerta(data, origem) {
+            alert(`Detalhes do alerta de ${origem} em ${data}`);
+        }
+
+        function showToast(msg, type) {
+            const toastHtml = `
+                <div class="toast align-items-center text-white bg-${type} border-0" role="alert">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            ${msg}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                    </div>
+                </div>
+            `;
+            let container = document.getElementById('toast-container');
+            if(!container) {
+                container = document.createElement('div');
+                container.id = 'toast-container';
+                container.style.position = 'fixed';
+                container.style.top = '20px';
+                container.style.right = '20px';
+                container.style.zIndex = '9999';
+
+            document.addEventListener('DOMContentLoaded', renderizarTabela);
+        </script>
+    </div>

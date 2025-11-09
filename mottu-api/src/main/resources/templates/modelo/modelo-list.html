@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout}">
+<head>
+    <title>Gerenciamento de Modelos - Mottu</title>
+</head>
+<body>
+<div layout:fragment="content"
+     xmlns:th="http://www.thymeleaf.org"
+     xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+     xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 mb-1">
+                    <i class="fas fa-cogs me-2 text-primary"></i>
+                    Gerenciamento de Modelos
+                </h1>
+                <p class="text-muted mb-0">Lista e controle de todos os modelos de moto</p>
+            </div>
+            <div>
+                <!-- Botão Novo Modelo protegido -->
+                <a th:href="@{/modelos/novo}" class="btn btn-primary" sec:authorize="hasRole('ADMIN')">
+                    <i class="fas fa-plus me-2"></i>Novo Modelo
+                </a>
+            </div>
+        </div>
+
+        <!-- Cards de Estatísticas -->
+        <div class="row mb-4">
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title">Total Modelos</h6>
+                                <h3 th:text="${modelos != null ? modelos.size() : 0}">0</h3>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-cogs fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card bg-info text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title">Fabricantes</h6>
+                                <h3 id="total-fabricantes">0</h3>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-industry fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title">Motos Ativas</h6>
+                                <h3 id="total-motos">0</h3>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-motorcycle fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card bg-warning text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title">Cilindrada Média</h6>
+                                <h3 id="cilindrada-media">0cc</h3>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-tachometer-alt fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtros e Busca -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form th:action="@{/modelos}" method="get" class="row g-3">
+                    <div class="col-md-4">
+                        <label for="fabricante" class="form-label">Fabricante</label>
+                        <input type="text" class="form-control" id="fabricante" name="fabricante" 
+                               th:value="${fabricante}" placeholder="Honda, Yamaha, BMW...">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="tipo" class="form-label">Tipo</label>
+                        <select class="form-select" id="tipo" name="tipo">
+                            <option value="">Todos os Tipos</option>
+                            <option value="Naked" th:selected="${tipo == 'Naked'}">Naked</option>
+                            <option value="Esportiva" th:selected="${tipo == 'Esportiva'}">Esportiva</option>
+                            <option value="Scooter" th:selected="${tipo == 'Scooter'}">Scooter</option>
+                            <option value="Adventure" th:selected="${tipo == 'Adventure'}">Adventure</option>
+                            <option value="Touring" th:selected="${tipo == 'Touring'}">Touring</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="cilindrada" class="form-label">Cilindrada</label>
+                        <select class="form-select" id="cilindrada" name="cilindrada">
+                            <option value="">Todas</option>
+                            <option value="125" th:selected="${cilindrada == '125'}">125cc</option>
+                            <option value="160" th:selected="${cilindrada == '160'}">160cc</option>
+                            <option value="300" th:selected="${cilindrada == '300'}">300cc</option>
+                            <option value="600" th:selected="${cilindrada == '600'}">600cc</option>
+                            <option value="1000" th:selected="${cilindrada == '1000'}">1000cc+</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-outline-primary me-2">
+                            <i class="fas fa-search me-1"></i>Filtrar
+                        </button>
+                        <a th:href="@{/modelos}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times"></i>
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Tabela de Modelos -->
+        <div class="card">
+            <div class="card-body">
+                <div th:if="${modelos != null and !#lists.isEmpty(modelos)}">
+                    <div class="table-responsive">
+                        <table class="table table-hover" role="table" aria-label="Lista de modelos">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Fabricante</th>
+                                    <th>Modelo</th>
+                                    <th>Cilindrada</th>
+                                    <th>Tipo</th>
+                                    <th>Motos Cadastradas</th>
+                                    <th sec:authorize="hasRole('ADMIN')">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="modelo : ${modelos}">
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="me-3">
+                                                <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center"
+                                                     style="width: 40px; height: 40px;">
+                                                    <span th:text="${#strings.substring(modelo.fabricante, 0, 1).toUpperCase()}">H</span>
+                                                </div>
+                                            </div>
+                                            <strong th:text="${modelo.fabricante}">Honda</strong>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <strong th:text="${modelo.nomeModelo}">CB600F</strong>
+                                            <br>
+                                            <small class="text-muted">ID: <span th:text="${modelo.idModelo}">1</span></small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-tachometer-alt me-2 text-primary"></i>
+                                            <span class="fw-bold" th:text="${modelo.cilindrada}">600</span>cc
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge fs-6" 
+                                              th:classappend="${modelo.tipo == 'Esportiva' ? 'bg-danger' : 
+                                                             (modelo.tipo == 'Naked' ? 'bg-primary' : 
+                                                             (modelo.tipo == 'Scooter' ? 'bg-info' : 
+                                                             (modelo.tipo == 'Adventure' ? 'bg-success' : 'bg-secondary')))}"
+                                              th:text="${modelo.tipo}">
+                                            Naked
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <span class="badge bg-light text-dark me-2">
+                                                <i class="fas fa-motorcycle me-1"></i>
+                                                <span th:text="${modelo.motos != null ? modelo.motos.size() : 0}">0</span>
+                                            </span>
+                                            <div th:if="${modelo.motos != null and modelo.motos.size() > 0}" class="progress" style="width: 60px; height: 8px;">
+                                                <div class="progress-bar bg-success" style="width: 100%"></div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td sec:authorize="hasRole('ADMIN')">
+                                        <!-- Botões de ação protegidos -->
+                                        <div class="btn-group" role="group">
+                                            <a th:href="@{/modelos/{id}(id=${modelo.idModelo})}" class="btn btn-sm btn-outline-info" title="Visualizar">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a th:href="@{/modelos/{id}/editar(id=${modelo.idModelo})}" class="btn btn-sm btn-outline-warning" title="Editar">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-outline-danger" title="Excluir"
+                                                    th:onclick="'confirmarExclusao(' + ${modelo.idModelo} + ', \' ' + ${modelo.fabricante} + ' ' + ${modelo.nomeModelo} + '\')'">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Lista Vazia -->
+                <div th:if="${modelos == null or #lists.isEmpty(modelos)}" class="text-center py-5">
+                    <div class="mb-4">
+                        <i class="fas fa-cogs fa-4x text-muted"></i>
+                    </div>
+                    <h4 class="text-muted">Nenhum modelo encontrado</h4>
+                    <p class="text-muted mb-4">
+                        <span th:if="${fabricante != null and !fabricante.isEmpty()}">
+                            Não foi possível encontrar modelos do fabricante "<strong th:text="${fabricante}"></strong>".
+                        </span>
+                        <span th:unless="${fabricante != null and !fabricante.isEmpty()}">
+                            Ainda não há modelos cadastrados no sistema.
+                        </span>
+                    </p>
+                    <div>
+                        <a th:href="@{/modelos/novo}" class="btn btn-primary" sec:authorize="hasRole('ADMIN')">
+                            <i class="fas fa-plus me-2"></i>Cadastrar primeiro modelo
+                        </a>
+                        <a th:href="@{/modelos}" class="btn btn-outline-secondary" th:if="${fabricante != null and !fabricante.isEmpty()}">
+                            <i class="fas fa-times me-2"></i>Limpar filtros
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal de Confirmação de Exclusão -->
+        <div class="modal fade" id="modalExclusao" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-exclamation-triangle text-danger me-2"></i>
+                            Confirmar Exclusão
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Tem certeza que deseja excluir o modelo <strong id="nomeExclusao"></strong>?</p>
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Atenção:</strong> Esta ação não pode ser desfeita e pode afetar motos cadastradas.
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-2"></i>Cancelar
+                        </button>
+                        <form id="formExclusao" method="post" style="display: inline;">
+                            <input type="hidden" name="_method" value="DELETE">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash me-2"></i>Excluir Modelo
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts específicos da página -->
+    <div layout:fragment="scripts">
+        <script>
+            function confirmarExclusao(id, nome) {
+                document.getElementById('nomeExclusao').textContent = nome;
+                document.getElementById('formExclusao').action = '/modelos/' + id;
+                new bootstrap.Modal(document.getElementById('modalExclusao')).show();
+            }
+            
+            // Calcular estatísticas
+            document.addEventListener('DOMContentLoaded', function() {
+                const rows = document.querySelectorAll('tbody tr');
+                let fabricantes = new Set();
+                let totalMotos = 0;
+                let somaCilindrada = 0;
+                
+                rows.forEach(row => {
+                    // Fabricante
+                    const fabricante = row.querySelector('td:first-child strong').textContent.trim();
+                    fabricantes.add(fabricante);
+                    
+                    // Motos
+                    const motosText = row.querySelector('td:nth-child(5) .badge span').textContent;
+                    const motos = parseInt(motosText);
+                    totalMotos += motos;
+                    
+                    // Cilindrada
+                    const cilindradaText = row.querySelector('td:nth-child(3) .fw-bold').textContent;
+                    const cilindrada = parseInt(cilindradaText);
+                    somaCilindrada += cilindrada;
+                });
+                
+                document.getElementById('total-fabricantes').textContent = fabricantes.size;
+                document.getElementById('total-motos').textContent = totalMotos;
+                
+                const cilindradaMedia = rows.length > 0 ? Math.round(somaCilindrada / rows.length) : 0;
+                document.getElementById('cilindrada-media').textContent = cilindradaMedia + 'cc';
+            });
+        </script>
+    </div>
+</div>
+</body>
+</html>

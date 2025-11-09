@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout}">
+<head>
+    <title>Histórico de Atividades - Mottu</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">
+                <i class="fas fa-history me-2 text-primary"></i>
+                Histórico de Atividades
+            </h1>
+            <p class="text-muted mb-0">Registro completo de todas as atividades do sistema</p>
+        </div>
+        <div>
+            <button class="btn btn-outline-info me-2" onclick="exportarHistorico()">
+                <i class="fas fa-download me-2"></i>Exportar
+            </button>
+            <button class="btn btn-outline-warning me-2" onclick="atualizarHistorico()">
+                <i class="fas fa-sync-alt me-2"></i>Atualizar
+            </button>
+            <button class="btn btn-outline-danger" onclick="limparHistorico()" sec:authorize="hasRole('ADMIN')">
+                <i class="fas fa-trash me-2"></i>Limpar Histórico
+            </button>
+        </div>
+    </div>
+
+    <!-- Cards de Estatísticas do Histórico -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Total Registros</h6>
+                            <h3 id="total-registros">1,247</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-list fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Hoje</h6>
+                            <h3 id="registros-hoje">64</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-calendar-day fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Alertas</h6>
+                            <h3 id="total-alertas">12</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-exclamation-triangle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Usuários Ativos</h6>
+                            <h3 id="usuarios-ativos-hist">8</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-users fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros Avançados -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form class="row g-3" id="filtrosHistorico">
+                <div class="col-md-2">
+                    <label for="dataInicio" class="form-label">Data Início</label>
+                    <input type="date" class="form-control" id="dataInicio" name="dataInicio"
+                           th:value="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}">
+                </div>
+                <div class="col-md-2">
+                    <label for="dataFim" class="form-label">Data Fim</label>
+                    <input type="date" class="form-control" id="dataFim" name="dataFim"
+                           th:value="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}">
+                </div>
+                <div class="col-md-2">
+                    <label for="tipoAtividade" class="form-label">Tipo</label>
+                    <select class="form-select" id="tipoAtividade" name="tipoAtividade">
+                        <option value="">Todos</option>
+                        <option value="LOGIN">Login/Logout</option>
+                        <option value="CRUD_MOTO">CRUD Motos</option>
+                        <option value="CRUD_MODELO">CRUD Modelos</option>
+                        <option value="CRUD_PATIO">CRUD Pátios</option>
+                        <option value="CRUD_USUARIO">CRUD Usuários</option>
+                        <option value="SENSOR">Sensores IoT</option>
+                        <option value="ALERTA">Alertas</option>
+                        <option value="SISTEMA">Sistema</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="usuario" class="form-label">Usuário</label>
+                    <select class="form-select" id="usuario" name="usuario">
+                        <option value="">Todos</option>
+                        <option value="admin">Administrador</option>
+                        <option value="operador1">João Operador</option>
+                        <option value="operador2">Maria Silva</option>
+                        <option value="manutencao">Manutenção</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="nivel" class="form-label">Nível</label>
+                    <select class="form-select" id="nivel" name="nivel">
+                        <option value="">Todos</option>
+                        <option value="INFO">Informação</option>
+                        <option value="WARNING">Aviso</option>
+                        <option value="ERROR">Erro</option>
+                        <option value="CRITICAL">Crítico</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="button" class="btn btn-outline-primary me-2" onclick="filtrarHistorico()">
+                        <i class="fas fa-search me-1"></i>Filtrar
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" onclick="limparFiltros()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Timeline de Atividades -->
+    <div class="card">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-clock me-2"></i>Timeline de Atividades
+                </h5>
+                <div>
+                    <div class="btn-group" role="group">
+                        <input type="radio" class="btn-check" name="tipoVisualizacao" id="view-timeline" checked>
+                        <label class="btn btn-outline-primary btn-sm" for="view-timeline">
+                            <i class="fas fa-stream me-1"></i>Timeline
+                        </label>
+
+                        <input type="radio" class="btn-check" name="tipoVisualizacao" id="view-table">
+                        <label class="btn btn-outline-primary btn-sm" for="view-table">
+                            <i class="fas fa-table me-1"></i>Tabela
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <!-- Vista Timeline -->
+            <div id="timeline-view">
+                <div class="timeline-container">
+                    <!-- Atividade 1 -->
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-success"></div>
+                        <div class="timeline-content">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="timeline-title mb-1">
+                                        <i class="fas fa-sign-in-alt me-2 text-success"></i>
+                                        Login realizado com sucesso
+                                    </h6>
+                                    <p class="timeline-text text-muted mb-1">
+                                        Usuário <strong>João Silva</strong> (Operador) acessou o sistema
+                                    </p>
+                                    <div class="timeline-meta">
+                                        <span class="badge bg-success me-2">LOGIN</span>
+                                        <span class="badge bg-light text-dark">INFO</span>
+                                    </div>
+                                </div>
+                                <small class="text-muted">Hoje, 14:32</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Atividade 2 -->
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-primary"></div>
+                        <div class="timeline-content">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="timeline-title mb-1">
+                                        <i class="fas fa-motorcycle me-2 text-primary"></i>
+                                        Nova moto cadastrada
+                                    </h6>
+                                    <p class="timeline-text text-muted mb-1">
+                                        Moto <strong>ABC-5678</strong> (Honda CB600F) foi adicionada ao sistema
+                                    </p>
+                                    <div class="timeline-meta">
+                                        <span class="badge bg-primary me-2">CRUD_MOTO</span>
+                                        <span class="badge bg-light text-dark">INFO</span>
+                                    </div>
+                                </div>
+                                <small class="text-muted">Hoje, 14:28</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Atividade 3 -->
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-warning"></div>
+                        <div class="timeline-content">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="timeline-title mb-1">
+                                        <i class="fas fa-battery-quarter me-2 text-warning"></i>
+                                        Alerta: Bateria baixa em sensor
+                                    </h6>
+                                    <p class="timeline-text text-muted mb-1">
+                                        Sensor <strong>IOT-045</strong> da moto DEF-1234 com bateria em 15%
+                                    </p>
+                                    <div class="timeline-meta">
+                                        <span class="badge bg-warning me-2">ALERTA</span>
+                                        <span class="badge bg-warning text-dark">WARNING</span>
+                                    </div>
+                                </div>
+                                <small class="text-muted">Hoje, 14:25</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Atividade 4 -->
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-info"></div>
+                        <div class="timeline-content">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="timeline-title mb-1">
+                                        <i class="fas fa-sync-alt me-2 text-info"></i>
+                                        Sincronização de sensores
+                                    </h6>
+                                    <p class="timeline-text text-muted mb-1">
+                                        Realizada sincronização automática de 23 sensores IoT
+                                    </p>
+                                    <div class="timeline-meta">
+                                        <span class="badge bg-info me-2">SENSOR</span>
+                                        <span class="badge bg-light text-dark">INFO</span>
+                                    </div>
+                                </div>
+                                <small class="text-muted">Hoje, 14:00</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Atividade 5 -->
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-danger"></div>
+                        <div class="timeline-content">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="timeline-title mb-1">
+                                        <i class="fas fa-exclamation-triangle me-2 text-danger"></i>
+                                        Erro: Falha na conexão com sensor
+                                    </h6>
+                                    <p class="timeline-text text-muted mb-1">
+                                        Sensor <strong>IOT-012</strong> não respondeu após 3 tentativas
+                                    </p>
+                                    <div class="timeline-meta">
+                                        <span class="badge bg-danger me-2">SENSOR</span>
+                                        <span class="badge bg-danger">ERROR</span>
+                                    </div>
+                                </div>
+                                <small class="text-muted">Hoje, 13:45</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Atividade 6 -->
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-secondary"></div>
+                        <div class="timeline-content">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="timeline-title mb-1">
+                                        <i class="fas fa-user-edit me-2 text-secondary"></i>
+                                        Usuário editado
+                                    </h6>
+                                    <p class="timeline-text text-muted mb-1">
+                                        Perfil do usuário <strong>Maria Silva</strong> foi atualizado
+                                    </p>
+                                    <div class="timeline-meta">
+                                        <span class="badge bg-secondary me-2">CRUD_USUARIO</span>
+                                        <span class="badge bg-light text-dark">INFO</span>
+                                    </div>
+                                </div>
+                                <small class="text-muted">Hoje, 13:30</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Atividade 7 -->
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-success"></div>
+                        <div class="timeline-content">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="timeline-title mb-1">
+                                        <i class="fas fa-warehouse me-2 text-success"></i>
+                                        Novo pátio cadastrado
+                                    </h6>
+                                    <p class="timeline-text text-muted mb-1">
+                                        Pátio <strong>São Paulo - Zona Norte</strong> adicionado com capacidade para 40 motos
+                                    </p>
+                                    <div class="timeline-meta">
+                                        <span class="badge bg-success me-2">CRUD_PATIO</span>
+                                        <span class="badge bg-light text-dark">INFO</span>
+                                    </div>
+                                </div>
+                                <small class="text-muted">Hoje, 12:15</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Atividade 8 -->
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-info"></div>
+                        <div class="timeline-content">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="timeline-title mb-1">
+                                        <i class="fas fa-database me-2 text-info"></i>
+                                        Backup automático realizado
+                                    </h6>
+                                    <p class="timeline-text text-muted mb-1">
+                                        Backup diário do banco de dados executado com sucesso
+                                    </p>
+                                    <div class="timeline-meta">
+                                        <span class="badge bg-info me-2">SISTEMA</span>
+                                        <span class="badge bg-light text-dark">INFO</span>
+                                    </div>
+                                </div>
+                                <small class="text-muted">Hoje, 02:00</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Paginação -->
+                <div class="d-flex justify-content-between align-items-center mt-4">
+                    <div>
+                        <small class="text-muted">Mostrando 1-8 de 1,247 registros</small>
+                    </div>
+                    <nav>
+                        <ul class="pagination pagination-sm mb-0">
+                            <li class="page-item disabled">
+                                <span class="page-link">Anterior</span>
+                            </li>
+                            <li class="page-item active">
+                                <span class="page-link">1</span>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="#" onclick="carregarPagina(2)">2</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="#" onclick="carregarPagina(3)">3</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="#" onclick="carregarPagina(2)">Próximo</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- Vista Tabela -->
+            <div id="table-view" style="display: none;">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Data/Hora</th>
+                                <th>Tipo</th>
+                                <th>Usuário</th>
+                                <th>Atividade</th>
+                                <th>Detalhes</th>
+                                <th>Nível</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <small>28/09/2025<br>14:32</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-success">LOGIN</span>
+                                </td>
+                                <td>João Silva</td>
+                                <td>Login realizado</td>
+                                <td>
+                                    <small class="text-muted">Acesso via web browser</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark">INFO</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <small>28/09/2025<br>14:28</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary">CRUD_MOTO</span>
+                                </td>
+                                <td>João Silva</td>
+                                <td>Moto cadastrada</td>
+                                <td>
+                                    <small class="text-muted">ABC-5678 - Honda CB600F</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark">INFO</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <small>28/09/2025<br>14:25</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-warning text-dark">ALERTA</span>
+                                </td>
+                                <td>Sistema</td>
+                                <td>Bateria baixa</td>
+                                <td>
+                                    <small class="text-muted">IOT-045 - Bateria: 15%</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-warning text-dark">WARNING</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <small>28/09/2025<br>13:45</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-danger">SENSOR</span>
+                                </td>
+                                <td>Sistema</td>
+                                <td>Erro de conexão</td>
+                                <td>
+                                    <small class="text-muted">IOT-012 - Timeout</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-danger">ERROR</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Exportação -->
+    <div class="modal fade" id="modalExportar" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-download text-primary me-2"></i>
+                        Exportar Histórico
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="formatoExport" class="form-label">Formato</label>
+                            <select class="form-select" id="formatoExport">
+                                <option value="csv">CSV</option>
+                                <option value="excel">Excel (.xlsx)</option>
+                                <option value="pdf">PDF</option>
+                                <option value="json">JSON</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="periodoExport" class="form-label">Período</label>
+                            <select class="form-select" id="periodoExport">
+                                <option value="hoje">Hoje</option>
+                                <option value="semana">Última semana</option>
+                                <option value="mes" selected>Último mês</option>
+                                <option value="personalizado">Personalizado</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="incluirDetalhes" checked>
+                        <label class="form-check-label" for="incluirDetalhes">
+                            Incluir detalhes completos
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>Cancelar
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="iniciarExportacao()">
+                        <i class="fas fa-download me-2"></i>Exportar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts específicos da página -->
+<div layout:fragment="scripts">
+    <script>
+        // Alternar entre vista timeline e tabela
+        document.querySelectorAll('input[name="tipoVisualizacao"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const timelineView = document.getElementById('timeline-view');
+                const tableView = document.getElementById('table-view');
+
+                if (this.id === 'view-timeline') {
+                    timelineView.style.display = 'block';
+                    tableView.style.display = 'none';
+                } else {
+                    timelineView.style.display = 'none';
+                    tableView.style.display = 'block';
+                }
+            });
+        });
+
+        function filtrarHistorico() {
+            // Simular filtro
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Filtrando...';
+            btn.disabled = true;
+
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+
+                // Mostrar toast de sucesso
+                showToast('Filtros aplicados com sucesso!', 'success');
+            }, 1500);
+        }
+
+        function limparFiltros() {
+            document.getElementById('filtrosHistorico').reset();
+            const hoje = new Date().toISOString().split('T')[0];
+            document.getElementById('dataInicio').value = hoje;
+            document.getElementById('dataFim').value = hoje;
+        }
+
+        function exportarHistorico() {
+            new bootstrap.Modal(document.getElementById('modalExportar')).show();
+        }
+
+        function iniciarExportacao() {
+            const formato = document.getElementById('formatoExport').value;
+            const periodo = document.getElementById('periodoExport').value;
+
+            // Simular exportação
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalExportar'));
+            modal.hide();
+
+            showToast(`Exportação iniciada! Arquivo ${formato.toUpperCase()} será baixado em breve.`, 'info');
+
+            // Simular download após 3 segundos
+            setTimeout(() => {
+                showToast('Download concluído com sucesso!', 'success');
+            }, 3000);
+        }
+
+        function atualizarHistorico() {
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Atualizando...';
+            btn.disabled = true;
+
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                location.reload();
+            }, 2000);
+        }
+
+        function limparHistorico() {
+            if (confirm('ATENÇÃO: Esta ação irá apagar permanentemente todo o histórico de atividades. Deseja continuar?')) {
+                if (confirm('Confirma a exclusão PERMANENTE de todos os registros de histórico?')) {
+                    showToast('Histórico limpo com sucesso!', 'warning');
+
+                    // Simular limpeza
+                    setTimeout(() => {
+                        location.reload();
+                    }, 2000);
+                }
+            }
+        }
+
+        function carregarPagina(pagina) {
+            // Simular carregamento de página
+            showToast(`Carregando página ${pagina}...`, 'info');
+
+            setTimeout(() => {
+                showToast('Página carregada!', 'success');
+            }, 1000);
+        }
+
+        function showToast(message, type) {
+            // Criar toast dinamicamente
+            const toastHtml = `
+                <div class="toast align-items-center text-white bg-${type} border-0" role="alert">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <i class="fas fa-info-circle me-2"></i>${message}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                    </div>
+                </div>
+            `;
+
+            let container = document.getElementById('toast-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'toast-container';
+                container.style.position = 'fixed';
+                container.style.top = '20px';
+                container.style.right = '20px';
+                container.style.zIndex = '9999';
+                document.body.appendChild(container);
+            }
+
+            const toastElement = document.createElement('div');
+            toastElement.innerHTML = toastHtml;
+            container.appendChild(toastElement);
+
+            const toast = new bootstrap.Toast(toastElement.querySelector('.toast'));
+            toast.show();
+
+            // Remover após ser fechado
+            toastElement.querySelector('.toast').addEventListener('hidden.bs.toast', () => {
+                container.removeChild(toastElement);
+            });
+        }
+
+        // Auto-refresh a cada 2 minutos
+        setInterval(() => {
+            if (!document.hidden) {
+                // Atualizar estatísticas
+                const registrosHoje = document.getElementById('registros-hoje');
+                let valor = parseInt(registrosHoje.textContent);
+                registrosHoje.textContent = valor + Math.floor(Math.random() * 3);
+            }
+        }, 120000);
+
+        // Inicializar dados
+        document.addEventListener('DOMContentLoaded', function() {
+            const hoje = new Date().toISOString().split('T')[0];
+            document.getElementById('dataInicio').value = hoje;
+            document.getElementById('dataFim').value = hoje;
+        });
+    </script>
+
+    <style>
+        .timeline-container {
+            position: relative;
+            padding-left: 30px;
+        }
+
+        .timeline-container::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, #007bff, #28a745, #ffc107, #dc3545);
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 30px;
+        }
+
+        .timeline-marker {
+            position: absolute;
+            left: -22px;
+            top: 8px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            box-shadow: 0 0 0 2px #e9ecef;
+        }
+
+        .timeline-content {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            border-left: 4px solid #007bff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .timeline-content:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+        }
+
+        .timeline-title {
+            color: #495057;
+            font-size: 0.95rem;
+            margin-bottom: 8px;
+        }
+
+        .timeline-text {
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .timeline-meta {
+            margin-top: 10px;
+        }
+
+        .timeline-meta .badge {
+            font-size: 0.75rem;
+        }
+    </style>
+</div>
+</body>
+</html>

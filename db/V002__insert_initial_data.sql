@@ -1,0 +1,35 @@
+---- V002__insert_initial_data.sql
+---- Inserção de dados iniciais para testes do sistema
+--
+---- Usuários
+--INSERT INTO Usuario_sistema (nome, email, senha, perfil, ativo) VALUES
+--('Administrador', '[admin@mottu.com](mailto:admin@mottu.com)', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iKXOGP0DUjdLLK/x8z2Icd0hLBqi', 'ADMIN', 1);
+--
+--INSERT INTO Usuario_sistema (nome, email, senha, perfil, ativo) VALUES
+--('Operador Teste', '[operador@mottu.com](mailto:operador@mottu.com)', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iKXOGP0DUjdLLK/x8z2Icd0hLBqi', 'OPERADOR', 1);
+--
+--INSERT INTO Usuario_sistema (nome, email, senha, perfil, ativo) VALUES
+--('Manutenção Teste', '[manutencao@mottu.com](mailto:manutencao@mottu.com)', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iKXOGP0DUjdLLK/x8z2Icd0hLBqi', 'MANUTENCAO', 1);
+--
+---- Alguns modelos
+--INSERT INTO Modelo (fabricante, nome_modelo, cilindrada, tipo) VALUES
+--('Honda', 'CB 600F', 600, 'Naked');
+--
+--INSERT INTO Modelo (fabricante, nome_modelo, cilindrada, tipo) VALUES
+--('Yamaha', 'MT-07', 689, 'Naked');
+--
+---- Pátios
+--INSERT INTO Patio (nome_patio, localizacao_patio, area_total, capacidade_maxima) VALUES
+--('Pátio Central SP', 'São Paulo - Centro', 1500.50, 50);
+--
+--INSERT INTO Patio (nome_patio, localizacao_patio, area_total, capacidade_maxima) VALUES
+--('Pátio RJ Copacabana', 'Rio de Janeiro - Copacabana', 1200.00, 40);
+--
+---- Sensores
+--INSERT INTO Sensor_iot (tipo_sensor, data_transmissao, bateria_percentual) VALUES
+--('GPS', SYSDATE, 95.5);
+--
+--INSERT INTO Sensor_iot (tipo_sensor, data_transmissao, bateria_percentual) VALUES
+--('RFID', SYSDATE, 89.7);
+--
+--COMMIT;

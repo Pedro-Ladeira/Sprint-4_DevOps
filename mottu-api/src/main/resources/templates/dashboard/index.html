@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout}">
+<head>
+    <title>Dashboard - Mottu</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">
+                <i class="fas fa-tachometer-alt me-2 text-primary"></i>
+                Dashboard
+            </h1>
+            <p class="text-muted mb-0">Visão geral do sistema de gerenciamento de motos</p>
+        </div>
+        <div>
+            <span class="badge bg-success">
+                <i class="fas fa-circle me-1"></i>Sistema Online
+            </span>
+            <button class="btn btn-outline-primary btn-sm ms-2" id="refreshDashboard" data-refresh="dashboard">
+                <i class="fas fa-sync-alt me-1"></i>Atualizar
+            </button>
+        </div>
+    </div>
+
+    <!-- Estatísticas Principais -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stat-card h-100">
+                <div class="card-body text-center">
+                    <div class="icon text-primary mb-3">
+                        <i class="fas fa-motorcycle fa-2x"></i>
+                    </div>
+                    <h3 class="number text-primary" id="total-motos" th:text="${totalMotos ?: 0}">0</h3>
+                    <p class="label mb-0">Total de Motos</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stat-card h-100">
+                <div class="card-body text-center">
+                    <div class="icon text-success mb-3">
+                        <i class="fas fa-check-circle fa-2x"></i>
+                    </div>
+                    <h3 class="number text-success" id="motos-disponiveis" th:text="${motosDisponiveis ?: 0}">0</h3>
+                    <p class="label mb-0">Disponíveis</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stat-card h-100">
+                <div class="card-body text-center">
+                    <div class="icon text-warning mb-3">
+                        <i class="fas fa-key fa-2x"></i>
+                    </div>
+                    <h3 class="number text-warning" id="motos-alugadas" th:text="${motosAlugadas ?: 0}">0</h3>
+                    <p class="label mb-0">Alugadas</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stat-card h-100">
+                <div class="card-body text-center">
+                    <div class="icon text-danger mb-3">
+                        <i class="fas fa-tools fa-2x"></i>
+                    </div>
+                    <h3 class="number text-danger" id="motos-manutencao" th:text="${motosManutencao ?: 0}">0</h3>
+                    <p class="label mb-0">Em Manutenção</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Segunda linha de estatísticas -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stat-card h-100">
+                <div class="card-body text-center">
+                    <div class="icon text-info mb-3">
+                        <i class="fas fa-warehouse fa-2x"></i>
+                    </div>
+                    <h3 class="number text-info" th:text="${totalPatios ?: 0}">0</h3>
+                    <p class="label mb-0">Pátios</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stat-card h-100">
+                <div class="card-body text-center">
+                    <div class="icon text-secondary mb-3">
+                        <i class="fas fa-cogs fa-2x"></i>
+                    </div>
+                    <h3 class="number text-secondary" th:text="${totalModelos ?: 0}">0</h3>
+                    <p class="label mb-0">Modelos</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stat-card h-100">
+                <div class="card-body text-center">
+                    <div class="icon text-warning mb-3">
+                        <i class="fas fa-exclamation-triangle fa-2x"></i>
+                    </div>
+                    <h3 class="number text-warning" id="alertas-hoje" th:text="${alertasHoje != null ? alertasHoje.size() : 0}">0</h3>
+                    <p class="label mb-0">Alertas Hoje</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stat-card h-100">
+                <div class="card-body text-center">
+                    <div class="icon text-danger mb-3">
+                        <i class="fas fa-battery-quarter fa-2x"></i>
+                    </div>
+                    <h3 class="number text-danger" id="sensores-bateria-baixa" th:text="${sensoresBateriaBaixa != null ? sensoresBateriaBaixa.size() : 0}">0</h3>
+                    <p class="label mb-0">Bateria Baixa</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Conteúdo Principal -->
+    <div class="row">
+        <!-- Alertas Recentes -->
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-bell me-2"></i>Alertas Recentes
+                    </h5>
+                    <a th:href="@{/alertas}" class="btn btn-sm btn-outline-primary">Ver todos</a>
+                </div>
+                <div class="card-body">
+                    <div th:if="${alertasRecentes != null and !alertasRecentes.isEmpty()}">
+                        <div class="list-group list-group-flush">
+                            <div th:each="alerta : ${alertasRecentes}"
+                                 class="list-group-item d-flex justify-content-between align-items-start">
+                                <div class="ms-2 me-auto">
+                                    <div class="fw-bold" th:text="${alerta.tipoAlerta}">Tipo do Alerta</div>
+                                    <small class="text-muted">
+                                        Moto: <span th:text="${alerta.moto != null ? alerta.moto.placa : 'N/A'}"></span>
+                                    </small>
+                                </div>
+                                <span class="badge bg-warning rounded-pill"
+                                      th:text="${#temporals.format(alerta.dataGeracao, 'HH:mm')}">
+                                    00:00
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div th:if="${alertasRecentes == null or alertasRecentes.isEmpty()}"
+                         class="text-center py-4 text-muted">
+                        <i class="fas fa-check-circle fa-3x mb-3"></i>
+                        <p>Nenhum alerta recente</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pátios com Espaço -->
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-warehouse me-2"></i>Pátios Disponíveis
+                    </h5>
+                    <a th:href="@{/patios}" class="btn btn-sm btn-outline-primary">Ver todos</a>
+                </div>
+                <div class="card-body">
+                    <div th:if="${patiosDisponiveis != null and !patiosDisponiveis.isEmpty()}">
+                        <div class="list-group list-group-flush">
+                            <div th:each="patio : ${patiosDisponiveis}"
+                                 class="list-group-item d-flex justify-content-between align-items-start">
+                                <div class="ms-2 me-auto">
+                                    <div class="fw-bold" th:text="${patio.nomePatio}">Nome do Pátio</div>
+                                    <small class="text-muted" th:text="${patio.localizacaoPatio}">Localização</small>
+                                </div>
+                                <span class="badge bg-success rounded-pill">
+                                    <span th:text="${patio.capacidadeMaxima}">0</span> vagas
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div th:if="${patiosDisponiveis == null or patiosDisponiveis.isEmpty()}"
+                         class="text-center py-4 text-muted">
+                        <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+                        <p>Todos os pátios estão lotados</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ações Rápidas -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-bolt me-2"></i>Ações Rápidas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-lg-2 col-md-4 col-6 mb-3">
+                            <a th:href="@{/motos/novo}" class="btn btn-outline-primary w-100 h-100 d-flex flex-column justify-content-center"
+                               sec:authorize="hasAnyRole('ADMIN', 'OPERADOR')">
+                                <i class="fas fa-plus-circle fa-2x mb-2"></i>
+                                <span>Nova Moto</span>
+                            </a>
+                        </div>
+                        <div class="col-lg-2 col-md-4 col-6 mb-3" sec:authorize="hasRole('ADMIN')">
+                            <a th:href="@{/modelos/novo}" class="btn btn-outline-secondary w-100 h-100 d-flex flex-column justify-content-center">
+                                <i class="fas fa-cogs fa-2x mb-2"></i>
+                                <span>Novo Modelo</span>
+                            </a>
+                        </div>
+                        <div class="col-lg-2 col-md-4 col-6 mb-3" sec:authorize="hasRole('ADMIN')">
+                            <a th:href="@{/patios/novo}" class="btn btn-outline-info w-100 h-100 d-flex flex-column justify-content-center">
+                                <i class="fas fa-warehouse fa-2x mb-2"></i>
+                                <span>Novo Pátio</span>
+                            </a>
+                        </div>
+                        <div class="col-lg-2 col-md-4 col-6 mb-3">
+                            <a th:href="@{/alertas}" class="btn btn-outline-warning w-100 h-100 d-flex flex-column justify-content-center">
+                                <i class="fas fa-bell fa-2x mb-2"></i>
+                                <span>Ver Alertas</span>
+                            </a>
+                        </div>
+                        <div class="col-lg-2 col-md-4 col-6 mb-3">
+                            <a th:href="@{/historico}" class="btn btn-outline-dark w-100 h-100 d-flex flex-column justify-content-center">
+                                <i class="fas fa-history fa-2x mb-2"></i>
+                                <span>Histórico</span>
+                            </a>
+                        </div>
+                        <div class="col-lg-2 col-md-4 col-6 mb-3" sec:authorize="hasAnyRole('ADMIN', 'OPERADOR')">
+                            <a th:href="@{/relatorios}" class="btn btn-outline-success w-100 h-100 d-flex flex-column justify-content-center">
+                                <i class="fas fa-chart-bar fa-2x mb-2"></i>
+                                <span>Relatórios</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

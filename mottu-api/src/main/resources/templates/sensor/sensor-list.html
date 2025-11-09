@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout}">
+<head>
+    <title>Gerenciamento de Sensores IoT - Mottu</title>
+</head>
+<body>
+<div layout:fragment="content">
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 mb-1">
+                    <i class="fas fa-satellite-dish me-2 text-primary"></i>
+                    Gerenciamento de Sensores IoT
+                </h1>
+                <p class="text-muted mb-0">Monitoramento e controle de todos os sensores conectados</p>
+            </div>
+            <div>
+                <button class="btn btn-outline-success me-2" onclick="atualizarTodosSensores()">
+                    <i class="fas fa-sync-alt me-2"></i>Sincronizar Todos
+                </button>
+                <a th:href="@{/sensores/novo}" class="btn btn-primary" sec:authorize="hasAnyRole('ADMIN', 'OPERADOR')">
+                    <i class="fas fa-plus me-2"></i>Novo Sensor
+                </a>
+            </div>
+        </div>
+
+        <!-- Cards de Status dos Sensores -->
+        <div class="row mb-4">
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title">Total Sensores</h6>
+                                <h3 th:text="${sensores != null ? sensores.size() : 0}">0</h3>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-satellite-dish fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title">Online</h6>
+                                <h3 id="sensores-online">0</h3>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-wifi fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card bg-warning text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title">Bateria Baixa</h6>
+                                <h3 id="bateria-baixa">0</h3>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-battery-quarter fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card bg-danger text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title">Offline</h6>
+                                <h3 id="sensores-offline">0</h3>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-exclamation-triangle fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtros e Busca -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form th:action="@{/sensores}" method="get" class="row g-3">
+                    <div class="col-md-3">
+                        <label for="tipoSensor" class="form-label">Tipo de Sensor</label>
+                        <select class="form-select" id="tipoSensor" name="tipoSensor">
+                            <option value="">Todos os Tipos</option>
+                            <option value="GPS" th:selected="${tipoSensor == 'GPS'}">GPS - Localização</option>
+                            <option value="ACELEROMETRO" th:selected="${tipoSensor == 'ACELEROMETRO'}">Acelerômetro</option>
+                            <option value="TEMPERATURA" th:selected="${tipoSensor == 'TEMPERATURA'}">Temperatura</option>
+                            <option value="VELOCIDADE" th:selected="${tipoSensor == 'VELOCIDADE'}">Velocidade</option>
+                            <option value="COMBUSTIVEL" th:selected="${tipoSensor == 'COMBUSTIVEL'}">Combustível</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="statusBateria" class="form-label">Status Bateria</label>
+                        <select class="form-select" id="statusBateria" name="statusBateria">
+                            <option value="">Todos</option>
+                            <option value="alta" th:selected="${statusBateria == 'alta'}">Alta (80-100%)</option>
+                            <option value="media" th:selected="${statusBateria == 'media'}">Média (50-79%)</option>
+                            <option value="baixa" th:selected="${statusBateria == 'baixa'}">Baixa (20-49%)</option>
+                            <option value="critica" th:selected="${statusBateria == 'critica'}">Crítica (0-19%)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="motoId" class="form-label">Moto Associada</label>
+                        <select class="form-select" id="motoId" name="motoId">
+                            <option value="">Todas as Motos</option>
+                            <option th:each="moto : ${motos}" 
+                                    th:value="${moto.idMoto}" 
+                                    th:text="${moto.placa}"
+                                    th:selected="${motoId == moto.idMoto}">
+                                ABC1234
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button type="submit" class="btn btn-outline-primary me-2">
+                            <i class="fas fa-search me-1"></i>Filtrar
+                        </button>
+                        <a th:href="@{/sensores}" class="btn btn-outline-secondary me-2">
+                            <i class="fas fa-times"></i>
+                        </a>
+                        <button type="button" class="btn btn-outline-info" onclick="atualizarLista()">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Tabela de Sensores -->
+        <div class="card">
+            <div class="card-body">
+                <div th:if="${sensores != null and !#lists.isEmpty(sensores)}">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID Sensor</th>
+                                    <th>Tipo</th>
+                                    <th>Moto Associada</th>
+                                    <th>Status Bateria</th>
+                                    <th>Última Transmissão</th>
+                                    <th>Status Conexão</th>
+                                    <th sec:authorize="hasAnyRole('ADMIN', 'OPERADOR')">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="sensor : ${sensores}">
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="me-3">
+                                                <i class="fas fa-microchip fa-2x text-info"></i>
+                                            </div>
+                                            <div>
+                                                <strong th:text="'IOT-' + ${sensor.idSensorIot}">IOT-001</strong>
+                                                <br>
+                                                <small class="text-muted">ID: <span th:text="${sensor.idSensorIot}">1</span></small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge fs-6" 
+                                              th:classappend="${sensor.tipoSensor == 'GPS' ? 'bg-primary' : 
+                                                             (sensor.tipoSensor == 'ACELEROMETRO' ? 'bg-success' : 
+                                                             (sensor.tipoSensor == 'TEMPERATURA' ? 'bg-warning' : 'bg-info'))}"
+                                              th:text="${sensor.tipoSensor}">
+                                            GPS
+                                        </span>
+                                        <br>
+                                        <small class="text-muted">Sensor IoT</small>
+                                    </td>
+                                    <td>
+                                        <div th:if="${sensor.moto != null}">
+                                            <strong th:text="${sensor.moto.placa}">ABC1234</strong>
+                                            <br>
+                                            <small class="text-muted" th:text="${sensor.moto.modelo != null ? sensor.moto.modelo.fabricante + ' ' + sensor.moto.modelo.nomeModelo : ''}">
+                                                Honda CB600F
+                                            </small>
+                                        </div>
+                                        <div th:if="${sensor.moto == null}" class="text-muted">
+                                            <i class="fas fa-unlink me-1"></i>Não associado
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="progress me-2" style="width: 60px; height: 20px;">
+                                                <div class="progress-bar" 
+                                                     th:style="'width: ' + ${sensor.bateriaPercentual} + '%'"
+                                                     th:classappend="${sensor.bateriaPercentual >= 80 ? 'bg-success' : 
+                                                                    (sensor.bateriaPercentual >= 50 ? 'bg-primary' : 
+                                                                    (sensor.bateriaPercentual >= 20 ? 'bg-warning' : 'bg-danger'))}">
+                                                </div>
+                                            </div>
+                                            <span class="fw-bold" 
+                                                  th:classappend="${sensor.bateriaPercentual >= 50 ? 'text-success' : 
+                                                                 (sensor.bateriaPercentual >= 20 ? 'text-warning' : 'text-danger')}"
+                                                  th:text="${sensor.bateriaPercentual} + '%'">85%</span>
+                                        </div>
+                                        <small th:switch="${sensor.bateriaPercentual}">
+                                            <span th:case="#{sensor.bateriaPercentual >= 80}" class="text-success">Excelente</span>
+                                            <span th:case="#{sensor.bateriaPercentual >= 50}" class="text-primary">Boa</span>
+                                            <span th:case="#{sensor.bateriaPercentual >= 20}" class="text-warning">Baixa</span>
+                                            <span th:case="*" class="text-danger">Crítica</span>
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <div th:if="${sensor.dataTransmissao != null}">
+                                            <i class="fas fa-clock me-1 text-muted"></i>
+                                            <span th:text="${#temporals.format(sensor.dataTransmissao, 'dd/MM/yyyy')}">01/01/2024</span>
+                                            <br>
+                                            <small class="text-muted" th:text="${#temporals.format(sensor.dataTransmissao, 'HH:mm')}">14:30</small>
+                                        </div>
+                                        <div th:if="${sensor.dataTransmissao == null}" class="text-muted">
+                                            <i class="fas fa-question-circle me-1"></i>Nunca
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <!-- Simular status de conexão baseado na bateria e última transmissão -->
+                                        <div th:if="${sensor.bateriaPercentual > 0}">
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-wifi me-1"></i>Online
+                                            </span>
+                                            <br>
+                                            <small class="text-success">Conectado</small>
+                                        </div>
+                                        <div th:if="${sensor.bateriaPercentual == 0}">
+                                            <span class="badge bg-danger">
+                                                <i class="fas fa-exclamation-triangle me-1"></i>Offline
+                                            </span>
+                                            <br>
+                                            <small class="text-danger">Sem bateria</small>
+                                        </div>
+                                    </td>
+                                    <td sec:authorize="hasAnyRole('ADMIN', 'OPERADOR')">
+                                        <div class="btn-group" role="group">
+                                            <button type="button" class="btn btn-sm btn-outline-info" 
+                                                    title="Sincronizar dados"
+                                                    th:onclick="'sincronizarSensor(' + ${sensor.idSensorIot} + ')'">
+                                                <i class="fas fa-sync-alt"></i>
+                                            </button>
+                                            <a th:href="@{/sensores/{id}/editar(id=${sensor.idSensorIot})}" 
+                                               class="btn btn-sm btn-outline-warning" title="Editar configurações">
+                                                <i class="fas fa-cog"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-outline-success" 
+                                                    title="Testar sensor"
+                                                    th:onclick="'testarSensor(' + ${sensor.idSensorIot} + ')'">
+                                                <i class="fas fa-play"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                    title="Desconectar sensor" sec:authorize="hasRole('ADMIN')"
+                                                    th:onclick="'confirmarDesconexao(' + ${sensor.idSensorIot} + ', \'IOT-' + ${sensor.idSensorIot} + '\')'">
+                                                <i class="fas fa-unlink"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Lista Vazia -->
+                <div th:if="${sensores == null or #lists.isEmpty(sensores)}" class="text-center py-5">
+                    <div class="mb-4">
+                        <i class="fas fa-satellite-dish fa-4x text-muted"></i>
+                    </div>
+                    <h4 class="text-muted">Nenhum sensor encontrado</h4>
+                    <p class="text-muted mb-4">
+                        <span th:if="${tipoSensor != null and !tipoSensor.isEmpty()}">
+                            Não foi possível encontrar sensores do tipo "<strong th:text="${tipoSensor}"></strong>".
+                        </span>
+                        <span th:unless="${tipoSensor != null and !tipoSensor.isEmpty()}">
+                            Ainda não há sensores IoT cadastrados no sistema.
+                        </span>
+                    </p>
+                    <div>
+                        <a th:href="@{/sensores/novo}" class="btn btn-primary" sec:authorize="hasAnyRole('ADMIN', 'OPERADOR')">
+                            <i class="fas fa-plus me-2"></i>Cadastrar primeiro sensor
+                        </a>
+                        <a th:href="@{/sensores}" class="btn btn-outline-secondary" th:if="${tipoSensor != null and !tipoSensor.isEmpty()}">
+                            <i class="fas fa-times me-2"></i>Limpar filtros
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal de Confirmação de Desconexão -->
+        <div class="modal fade" id="modalDesconexao" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                            Confirmar Desconexão
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Tem certeza que deseja desconectar o sensor <strong id="sensorDesconexao"></strong>?</p>
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Atenção:</strong> O sensor será desassociado da moto e parará de transmitir dados.
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-2"></i>Cancelar
+                        </button>
+                        <form id="formDesconexao" method="post" style="display: inline;">
+                            <input type="hidden" name="_method" value="DELETE">
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-unlink me-2"></i>Desconectar Sensor
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal de Teste de Sensor -->
+        <div class="modal fade" id="modalTeste" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-play text-success me-2"></i>
+                            Teste de Sensor
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="text-center">
+                            <div class="spinner-border text-primary mb-3" role="status">
+                                <span class="visually-hidden">Testando...</span>
+                            </div>
+                            <p>Enviando comando de teste para o sensor...</p>
+                            <div id="resultado-teste" style="display: none;">
+                                <div class="alert alert-success">
+                                    <i class="fas fa-check-circle me-2"></i>
+                                    <strong>Teste realizado com sucesso!</strong><br>
+                                    Sensor respondeu corretamente aos comandos.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-2"></i>Fechar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts específicos da página -->
+    <div layout:fragment="scripts">
+        <script>
+            function confirmarDesconexao(id, nome) {
+                document.getElementById('sensorDesconexao').textContent = nome;
+                document.getElementById('formDesconexao').action = '/sensores/' + id + '/desconectar';
+                new bootstrap.Modal(document.getElementById('modalDesconexao')).show();
+            }
+            
+            function sincronizarSensor(id) {
+                // Simular sincronização
+                const btn = event.target.closest('button');
+                const originalHtml = btn.innerHTML;
+                
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                btn.disabled = true;
+                
+                setTimeout(() => {
+                    btn.innerHTML = originalHtml;
+                    btn.disabled = false;
+                    
+                    // Mostrar toast de sucesso
+                    showToast('Sensor IOT-' + id + ' sincronizado com sucesso!', 'success');
+                }, 2000);
+            }
+            
+            function testarSensor(id) {
+                const modal = new bootstrap.Modal(document.getElementById('modalTeste'));
+                modal.show();
+                
+                // Simular teste
+                setTimeout(() => {
+                    document.querySelector('.spinner-border').style.display = 'none';
+                    document.getElementById('resultado-teste').style.display = 'block';
+                }, 3000);
+            }
+            
+            function atualizarTodosSensores() {
+                const btn = event.target;
+                const originalHtml = btn.innerHTML;
+                
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Sincronizando...';
+                btn.disabled = true;
+                
+                setTimeout(() => {
+                    btn.innerHTML = originalHtml;
+                    btn.disabled = false;
+                    location.reload();
+                }, 3000);
+            }
+            
+            function atualizarLista() {
+                location.reload();
+            }
+            
+            function showToast(message, type) {
+                // Criar toast dinamicamente
+                const toastHtml = `
+                    <div class="toast align-items-center text-white bg-${type} border-0" role="alert">
+                        <div class="d-flex">
+                            <div class="toast-body">
+                                <i class="fas fa-check-circle me-2"></i>${message}
+                            </div>
+                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                        </div>
+                    </div>
+                `;
+                
+                // Adicionar ao container de toasts (você pode criar um)
+                const toastContainer = document.createElement('div');
+                toastContainer.innerHTML = toastHtml;
+                toastContainer.style.position = 'fixed';
+                toastContainer.style.top = '20px';
+                toastContainer.style.right = '20px';
+                toastContainer.style.zIndex = '9999';
+                
+                document.body.appendChild(toastContainer);
+                
+                const toast = new bootstrap.Toast(toastContainer.querySelector('.toast'));
+                toast.show();
+                
+                // Remover após 5 segundos
+                setTimeout(() => {
+                    document.body.removeChild(toastContainer);
+                }, 5000);
+            }
+            
+            // Calcular estatísticas
+            document.addEventListener('DOMContentLoaded', function() {
+                const rows = document.querySelectorAll('tbody tr');
+                let sensoresOnline = 0;
+                let bateriaBaixa = 0;
+                let sensoresOffline = 0;
+                
+                rows.forEach(row => {
+                    // Status de conexão
+                    const statusBadge = row.querySelector('td:nth-child(6) .badge');
+                    if (statusBadge) {
+                        if (statusBadge.textContent.includes('Online')) {
+                            sensoresOnline++;
+                        } else {
+                            sensoresOffline++;
+                        }
+                    }
+                    
+                    // Bateria baixa (menos de 20%)
+                    const bateriaText = row.querySelector('td:nth-child(4) .fw-bold');
+                    if (bateriaText) {
+                        const bateria = parseInt(bateriaText.textContent.replace('%', ''));
+                        if (bateria < 20) {
+                            bateriaBaixa++;
+                        }
+                    }
+                });
+                
+                document.getElementById('sensores-online').textContent = sensoresOnline;
+                document.getElementById('bateria-baixa').textContent = bateriaBaixa;
+                document.getElementById('sensores-offline').textContent = sensoresOffline;
+            });
+            
+            // Auto-refresh a cada 30 segundos
+            setInterval(() => {
+                if (!document.hidden) {
+                    atualizarLista();
+                }
+            }, 30000);
+        </script>
+    </div>
+</div>
+</body>
+</html>

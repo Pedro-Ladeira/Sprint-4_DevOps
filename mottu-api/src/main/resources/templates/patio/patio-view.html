@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="pt-br" 
+      xmlns:th="http://www.thymeleaf.org" 
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" 
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout}">
+<head>
+    <title th:text="'Pátio ' + ${patio.nomePatio} + ' - Mottu'">Pátio - Mottu</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 mb-1">
+                    <i class="fas fa-warehouse me-2 text-primary"></i>
+                    Análise do Pátio
+                </h1>
+                <p class="text-muted mb-0">
+                    Informações completas e análise de ocupação do pátio <strong th:text="${patio.nomePatio}">Pátio Central SP</strong>
+                </p>
+            </div>
+            <div>
+                <a th:href="@{/patios}" class="btn btn-outline-secondary me-2">
+                    <i class="fas fa-arrow-left me-2"></i>Voltar
+                </a>
+                <a th:href="@{/patios/{id}/editar(id=${patio.idPatio})}" 
+                   class="btn btn-warning" 
+                   sec:authorize="hasRole('ADMIN')">
+                    <i class="fas fa-edit me-2"></i>Editar
+                </a>
+            </div>
+        </div>
+
+        <!-- Cards de Métricas Principais -->
+        <div class="row mb-4">
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card bg-primary text-white h-100">
+                    <div class="card-body d-flex align-items-center">
+                        <div class="me-3">
+                            <i class="fas fa-motorcycle fa-2x"></i>
+                        </div>
+                        <div>
+                            <h4 id="vagas-ocupadas" th:text="${patio.motos != null ? patio.motos.size() : 0}">0</h4>
+                            <small>Vagas Ocupadas</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card bg-success text-white h-100">
+                    <div class="card-body d-flex align-items-center">
+                        <div class="me-3">
+                            <i class="fas fa-check-circle fa-2x"></i>
+                        </div>
+                        <div>
+                            <h4 id="vagas-disponiveis">0</h4>
+                            <small>Vagas Livres</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card bg-warning text-white h-100">
+                    <div class="card-body d-flex align-items-center">
+                        <div class="me-3">
+                            <i class="fas fa-percentage fa-2x"></i>
+                        </div>
+                        <div>
+                            <h4 id="taxa-ocupacao">0%</h4>
+                            <small>Taxa Ocupação</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card bg-info text-white h-100">
+                    <div class="card-body d-flex align-items-center">
+                        <div class="me-3">
+                            <i class="fas fa-expand-arrows-alt fa-2x"></i>
+                        </div>
+                        <div>
+                            <h4 id="area-por-moto">0m²</h4>
+                            <small>Área por Moto</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Informações Principais -->
+            <div class="col-lg-8">
+                <!-- Dados Básicos -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-info-circle me-2"></i>Informações do Pátio
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted">Nome do Pátio</label>
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-warehouse fa-2x text-primary me-3"></i>
+                                    <div class="fs-5 fw-bold" th:text="${patio.nomePatio}">Pátio Central SP</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted">Localização</label>
+                                <div class="fs-6">
+                                    <i class="fas fa-map-marker-alt me-2 text-danger"></i>
+                                    <span th:text="${patio.localizacaoPatio}">São Paulo - Centro</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted">Área Total</label>
+                                <div class="fs-4 text-info">
+                                    <i class="fas fa-expand me-2"></i>
+                                    <span th:text="${patio.areaTotal}">1500.50</span> m²
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted">Capacidade Máxima</label>
+                                <div class="fs-4 text-success">
+                                    <i class="fas fa-motorcycle me-2"></i>
+                                    <span th:text="${patio.capacidadeMaxima}">50</span> vagas
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Análise de Ocupação -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-chart-bar me-2"></i>Análise de Ocupação em Tempo Real
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Barra de Progresso Principal -->
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="fw-bold">Ocupação Atual:</span>
+                                <span id="ocupacao-texto" class="text-muted">0 de 0 vagas</span>
+                            </div>
+                            <div class="progress" style="height: 30px;">
+                                <div id="barra-ocupacao" class="progress-bar progress-bar-striped progress-bar-animated" 
+                                     style="width: 0%">
+                                    <span class="fw-bold">0%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Status e Alertas -->
+                        <div class="alert" id="status-patio">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <span id="mensagem-status">Analisando ocupação...</span>
+                            </div>
+                        </div>
+
+                        <!-- Métricas Detalhadas -->
+                        <div class="row">
+                            <div class="col-md-4 text-center">
+                                <div class="border rounded p-3">
+                                    <h6 class="text-muted">Densidade</h6>
+                                    <div class="fs-5 fw-bold" id="densidade-valor">0</div>
+                                    <small>motos/m²</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-center">
+                                <div class="border rounded p-3">
+                                    <h6 class="text-muted">Eficiência</h6>
+                                    <div class="fs-5 fw-bold" id="eficiencia-valor">0%</div>
+                                    <small>utilização</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-center">
+                                <div class="border rounded p-3">
+                                    <h6 class="text-muted">Classificação</h6>
+                                    <span class="badge fs-6" id="classificacao-badge">-</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Motos Estacionadas -->
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-motorcycle me-2"></i>Motos Estacionadas
+                        </h5>
+                        <div>
+                            <span class="badge bg-primary me-2" th:text="${patio.motos != null ? patio.motos.size() : 0} + ' motos'">0 motos</span>
+                            <a th:href="@{/motos/novo(patioId=${patio.idPatio})}" 
+                               class="btn btn-sm btn-outline-primary"
+                               sec:authorize="hasAnyRole('ADMIN', 'OPERADOR')">
+                                <i class="fas fa-plus me-1"></i>Adicionar
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div th:if="${patio.motos != null and !patio.motos.isEmpty()}">
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Placa</th>
+                                            <th>Modelo</th>
+                                            <th>Status</th>
+                                            <th>Sensor IoT</th>
+                                            <th>Último Update</th>
+                                            <th>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="moto : ${patio.motos}">
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <i class="fas fa-motorcycle me-2 text-primary"></i>
+                                                    <strong th:text="${moto.placa}">ABC1234</strong>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div>
+                                                    <span th:text="${moto.modelo != null ? moto.modelo.fabricante + ' ' + moto.modelo.nomeModelo : 'N/A'}">
+                                                        Honda CB600F
+                                                    </span>
+                                                    <br>
+                                                    <small class="text-muted" th:text="${moto.anoFabricacao}">2023</small>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span th:switch="${moto.status}">
+                                                    <span th:case="'DISPONIVEL'" class="badge bg-success">
+                                                        <i class="fas fa-check-circle me-1"></i>Disponível
+                                                    </span>
+                                                    <span th:case="'ALUGADA'" class="badge bg-warning">
+                                                        <i class="fas fa-key me-1"></i>Alugada
+                                                    </span>
+                                                    <span th:case="'MANUTENCAO'" class="badge bg-danger">
+                                                        <i class="fas fa-tools me-1"></i>Manutenção
+                                                    </span>
+                                                    <span th:case="*" class="badge bg-secondary" th:text="${moto.status}">Status</span>
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div th:if="${moto.sensorIot != null}">
+                                                    <span class="badge bg-info" th:text="${moto.sensorIot.tipoSensor}">GPS</span>
+                                                    <br>
+                                                    <small th:classappend="${moto.sensorIot.bateriaPercentual < 20 ? 'text-danger' : 'text-success'}"
+                                                           th:text="'Bateria: ' + ${moto.sensorIot.bateriaPercentual} + '%'">85%</small>
+                                                </div>
+                                                <div th:if="${moto.sensorIot == null}">
+                                                    <span class="badge bg-secondary">Sem sensor</span>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <small class="text-muted" th:text="${#temporals.format(moto.dataAtualizacao != null ? moto.dataAtualizacao : #temporals.createNow(), 'dd/MM HH:mm')}">
+                                                    Hoje 14:30
+                                                </small>
+                                            </td>
+                                            <td>
+                                                <a th:href="@{/motos/{id}(id=${moto.idMoto})}" 
+                                                   class="btn btn-sm btn-outline-info" title="Ver detalhes">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div th:if="${patio.motos == null or patio.motos.isEmpty()}" 
+                             class="text-center py-4 text-muted">
+                            <i class="fas fa-motorcycle fa-3x mb-3 opacity-50"></i>
+                            <h5>Pátio vazio</h5>
+                            <p>Não há motos estacionadas neste pátio no momento.</p>
+                            <a th:href="@{/motos/novo(patioId=${patio.idPatio})}" 
+                               class="btn btn-primary"
+                               sec:authorize="hasAnyRole('ADMIN', 'OPERADOR')">
+                                <i class="fas fa-plus me-2"></i>Adicionar primeira moto
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar - Análises e Controles -->
+            <div class="col-lg-4">
+                <!-- Resumo Visual -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-tachometer-alt me-2"></i>Dashboard do Pátio
+                        </h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <div class="mb-3">
+                            <div class="display-4 text-primary mb-2">
+                                <i class="fas fa-warehouse"></i>
+                            </div>
+                            <h4 th:text="${patio.nomePatio}">Pátio Central SP</h4>
+                            <p class="text-muted mb-3">
+                                <i class="fas fa-map-marker-alt me-1"></i>
+                                <span th:text="${patio.localizacaoPatio}">São Paulo - Centro</span>
+                            </p>
+                        </div>
+                        
+                        <!-- Layout Visual Simulado -->
+                        <div class="mb-3">
+                            <h6>Visualização do Layout:</h6>
+                            <div class="p-3 bg-light rounded border">
+                                <div class="row g-1" id="grid-ocupacao">
+                                    <!-- Será preenchido via JavaScript -->
+                                </div>
+                            </div>
+                            <small class="text-muted mt-2 d-block">
+                                <i class="fas fa-square text-warning"></i> Ocupado &nbsp;
+                                <i class="fas fa-square text-light border"></i> Disponível
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Análise Comparativa -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-chart-line me-2"></i>Análise Comparativa
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Capacidade vs Ocupação</label>
+                            <div class="d-flex justify-content-between mb-1">
+                                <small>Ocupado</small>
+                                <small>Disponível</small>
+                            </div>
+                            <div class="progress">
+                                <div id="progresso-ocupado" class="progress-bar bg-warning" style="width: 0%"></div>
+                                <div id="progresso-disponivel" class="progress-bar bg-success" style="width: 100%"></div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Benchmark de Eficiência</label>
+                            <div class="progress mb-1">
+                                <div id="benchmark-eficiencia" class="progress-bar" style="width: 0%"></div>
+                            </div>
+                            <small class="text-muted">Comparado com a média do sistema</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Simulações de Cenário -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-lightbulb me-2"></i>Simulações
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <div class="border rounded p-2 mb-2 bg-light">
+                                    <small class="text-success">50%</small>
+                                    <div id="sim-50" class="fw-bold">0</div>
+                                    <small>motos</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="border rounded p-2 mb-2 bg-light">
+                                    <small class="text-warning">80%</small>
+                                    <div id="sim-80" class="fw-bold">0</div>
+                                    <small>motos</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="border rounded p-2 mb-2 bg-light">
+                                    <small class="text-danger">100%</small>
+                                    <div id="sim-100" class="fw-bold">0</div>
+                                    <small>motos</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ações Rápidas -->
+                <div class="card mb-4" sec:authorize="hasRole('ADMIN')">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-bolt me-2"></i>Ações Rápidas
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a th:href="@{/patios/{id}/editar(id=${patio.idPatio})}" class="btn btn-outline-warning">
+                                <i class="fas fa-edit me-2"></i>Editar Pátio
+                            </a>
+                            <a th:href="@{/motos/novo(patioId=${patio.idPatio})}" class="btn btn-outline-primary">
+                                <i class="fas fa-plus me-2"></i>Cadastrar Moto
+                            </a>
+                            <a th:href="@{/motos?patioId={id}(id=${patio.idPatio})}" class="btn btn-outline-info">
+                                <i class="fas fa-list me-2"></i>Ver Motos
+                            </a>
+                            <button type="button" class="btn btn-outline-danger" 
+                                    th:onclick="'confirmarExclusao(' + ${patio.idPatio} + ', \'' + ${patio.nomePatio} + '\')'">
+                                <i class="fas fa-trash me-2"></i>Excluir Pátio
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Informações do Sistema -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-info me-2"></i>Dados do Sistema
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <small class="text-muted">
+                            <div><strong>ID:</strong> <span th:text="${patio.idPatio}">1</span></div>
+                            <div><strong>Nome:</strong> <span th:text="${patio.nomePatio}">Pátio Central SP</span></div>
+                            <div><strong>Localização:</strong> <span th:text="${patio.localizacaoPatio}">São Paulo</span></div>
+                            <div><strong>Área:</strong> <span th:text="${patio.areaTotal}">1500.50</span>m²</div>
+                            <div><strong>Capacidade:</strong> <span th:text="${patio.capacidadeMaxima}">50</span> vagas</div>
+                            <div><strong>Motos Ativas:</strong> <span th:text="${patio.motos != null ? patio.motos.size() : 0}">0</span></div>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal de Confirmação de Exclusão -->
+        <div class="modal fade" id="modalExclusao" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-exclamation-triangle text-danger me-2"></i>
+                            Confirmar Exclusão
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Tem certeza que deseja excluir o pátio <strong id="nomeExclusao"></strong>?</p>
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Atenção:</strong> Esta ação não pode ser desfeita e pode afetar motos localizadas neste pátio.
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-2"></i>Cancelar
+                        </button>
+                        <form id="formExclusao" method="post" style="display: inline;">
+                            <input type="hidden" name="_method" value="DELETE">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash me-2"></i>Excluir Pátio
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts específicos da página -->
+    <div layout:fragment="scripts">
+        <script th:inline="javascript">
+            const capacidade = /*[[${patio.capacidadeMaxima}]]*/ 50;
+            const ocupadas = /*[[${patio.motos != null ? patio.motos.size() : 0}]]*/ 0;
+            const areaTotal = /*[[${patio.areaTotal}]]*/ 1500.50;
+            
+            function calcularEstatisticas() {
+                const disponiveis = capacidade - ocupadas;
+                const taxaOcupacao = Math.round((ocupadas / capacidade) * 100);
+                const areaPorMoto = ocupadas > 0 ? (areaTotal / ocupadas).toFixed(1) : (areaTotal / capacidade).toFixed(1);
+                const densidade = (ocupadas / areaTotal).toFixed(4);
+                
+                // Atualizar cards principais
+                document.getElementById('vagas-disponiveis').textContent = disponiveis;
+                document.getElementById('taxa-ocupacao').textContent = taxaOcupacao + '%';
+                document.getElementById('area-por-moto').textContent = areaPorMoto + 'm²';
+                
+                // Atualizar métricas detalhadas
+                document.getElementById('ocupacao-texto').textContent = ocupadas + ' de ' + capacidade + ' vagas';
+                document.getElementById('densidade-valor').textContent = densidade;
+                document.getElementById('eficiencia-valor').textContent = taxaOcupacao + '%';
+                
+                // Atualizar barra de progresso principal
+                const barra = document.getElementById('barra-ocupacao');
+                barra.style.width = taxaOcupacao + '%';
+                barra.querySelector('span').textContent = taxaOcupacao + '%';
+                
+                // Definir cor da barra baseada na ocupação
+                barra.className = 'progress-bar progress-bar-striped progress-bar-animated ';
+                if (taxaOcupacao >= 100) {
+                    barra.className += 'bg-danger';
+                } else if (taxaOcupacao >= 80) {
+                    barra.className += 'bg-warning';
+                } else if (taxaOcupacao >= 50) {
+                    barra.className += 'bg-info';
+                } else {
+                    barra.className += 'bg-success';
+                }
+                
+                // Status do pátio
+                const statusDiv = document.getElementById('status-patio');
+                const mensagem = document.getElementById('mensagem-status');
+                
+                if (taxaOcupacao >= 100) {
+                    statusDiv.className = 'alert alert-danger';
+                    mensagem.innerHTML = '<strong>Pátio Lotado!</strong> Não há vagas disponíveis. Considere redirecionar para outros pátios.';
+                } else if (taxaOcupacao >= 90) {
+                    statusDiv.className = 'alert alert-warning';
+                    mensagem.innerHTML = '<strong>Ocupação Crítica:</strong> Apenas ' + disponiveis + ' vagas restantes. Monitorar de perto.';
+                } else if (taxaOcupacao >= 70) {
+                    statusDiv.className = 'alert alert-info';
+                    mensagem.innerHTML = '<strong>Alta Ocupação:</strong> ' + disponiveis + ' vagas disponíveis. Preparar para possível lotação.';
+                } else if (taxaOcupacao >= 30) {
+                    statusDiv.className = 'alert alert-success';
+                    mensagem.innerHTML = '<strong>Ocupação Normal:</strong> Boa disponibilidade com ' + disponiveis + ' vagas livres.';
+                } else {
+                    statusDiv.className = 'alert alert-primary';
+                    mensagem.innerHTML = '<strong>Baixa Ocupação:</strong> Excelente disponibilidade. Ideal para receber mais motos.';
+                }
+                
+                // Classificação
+                const badge = document.getElementById('classificacao-badge');
+                if (parseFloat(areaPorMoto) >= 30) {
+                    badge.textContent = 'Espaçoso';
+                    badge.className = 'badge fs-6 bg-success';
+                } else if (parseFloat(areaPorMoto) >= 20) {
+                    badge.textContent = 'Adequado';
+                    badge.className = 'badge fs-6 bg-primary';
+                } else if (parseFloat(areaPorMoto) >= 15) {
+                    badge.textContent = 'Compacto';
+                    badge.className = 'badge fs-6 bg-warning';
+                } else {
+                    badge.textContent = 'Apertado';
+                    badge.className = 'badge fs-6 bg-danger';
+                }
+                
+                // Simulações
+                document.getElementById('sim-50').textContent = Math.round(capacidade * 0.5);
+                document.getElementById('sim-80').textContent = Math.round(capacidade * 0.8);
+                document.getElementById('sim-100').textContent = capacidade;
+                
+                // Progresso comparativo
+                document.getElementById('progresso-ocupado').style.width = taxaOcupacao + '%';
+                document.getElementById('progresso-disponivel').style.width = (100 - taxaOcupacao) + '%';
+                
+                // Benchmark
+                const eficiencia = Math.min(taxaOcupacao + 20, 100); // Simula comparação
+                const benchmark = document.getElementById('benchmark-eficiencia');
+                benchmark.style.width = eficiencia + '%';
+                benchmark.className = 'progress-bar ' + (eficiencia >= 80 ? 'bg-success' : eficiencia >= 60 ? 'bg-warning' : 'bg-danger');
+            }
+            
+            function criarGridVisual() {
+                const grid = document.getElementById('grid-ocupacao');
+                const totalCells = Math.min(25, capacidade); // Máximo 25 células
+                const cellsOcupadas = Math.round((ocupadas / capacidade) * totalCells);
+                
+                grid.innerHTML = '';
+                
+                for (let i = 0; i < totalCells; i++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'col-1 p-1';
+                    
+                    const square = document.createElement('div');
+                    square.style.width = '12px';
+                    square.style.height = '12px';
+                    square.className = i < cellsOcupadas ? 'bg-warning rounded' : 'bg-light border rounded';
+                    square.title = i < cellsOcupadas ? 'Vaga Ocupada' : 'Vaga Disponível';
+                    
+                    cell.appendChild(square);
+                    grid.appendChild(cell);
+                }
+            }
+            
+            function confirmarExclusao(id, nome) {
+                document.getElementById('nomeExclusao').textContent = nome;
+                document.getElementById('formExclusao').action = '/patios/' + id;
+                new bootstrap.Modal(document.getElementById('modalExclusao')).show();
+            }
+            
+            // Inicializar quando a página carregar
+            document.addEventListener('DOMContentLoaded', function() {
+                calcularEstatisticas();
+                criarGridVisual();
+                
+                // Auto-refresh a cada 30 segundos (simulado)
+                setInterval(function() {
+                    // Aqui você poderia fazer uma requisição AJAX para atualizar os dados
+                    console.log('Atualizando dados do pátio...');
+                }, 30000);
+            });
+        </script>
+    </div>
+</body>
+</html>

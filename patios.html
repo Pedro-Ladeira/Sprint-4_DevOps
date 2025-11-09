@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    
+    <title>Novo Pátio - Mottu</title>
+
+    <!-- Inclua aqui seus CSS e scripts globais -->
+    <link rel="stylesheet" href="/css/home.css" />
+    <link rel="stylesheet" href="/css/style.css" />
+    <style>
+        .header {
+            background: linear-gradient(90deg, #005bea 0%, #3ec6e0 100%);
+            color: #fff;
+            box-shadow: 0 4px 16px rgba(0,94,255,0.15);
+            padding: 0.9rem 0 0.7rem 0;
+            border-bottom: 4px solid #ffd700;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            width: 100%;
+        }
+        .header .container-fluid {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            transition: color 0.2s;
+        }
+        .header h1:hover {
+            color: #ffd700;
+        }
+        .header .fa-motorcycle {
+            font-size: 2.5rem;
+            margin-right: 0.7rem;
+            color: #ffd700;
+            filter: drop-shadow(0 2px 4px #0004);
+            transition: transform 0.2s;
+        }
+        .header h1:hover .fa-motorcycle {
+            transform: scale(1.1) rotate(-10deg);
+        }
+        .header .btn-link {
+            color: #fff;
+            font-size: 2rem;
+            background: rgba(255,255,255,0.08);
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 0.7rem;
+            transition: background 0.2s, color 0.2s;
+            border: none;
+        }
+        .header .btn-link:hover {
+            background: #ffd700;
+            color: #005bea;
+        }
+        .user-info {
+            text-align: right;
+            font-size: 1.15rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        @media (max-width: 991px) {
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            .header .fa-motorcycle {
+                font-size: 1.7rem;
+            }
+        }
+        @media (max-width: 767px) {
+            .header .container-fluid {
+                padding: 0 10px;
+            }
+            .header h1 {
+                font-size: 1.1rem;
+                justify-content: center;
+            }
+            .user-info {
+                font-size: 1rem;
+                text-align: center;
+                margin-top: 0.5rem;
+            }
+            .header .row.align-items-center {
+                flex-direction: column;
+                align-items: stretch !important;
+            }
+        }
+    </style>
+    <meta charset="UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- O CSS já está incluído via base.html -->
+</head>
+<body>
+<div>
+    <header class="header">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col-md-6 col-8 d-flex align-items-center">
+                    <button class="btn btn-link text-white d-md-none me-3" id="sidebar-toggle" title="Abrir menu">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h1 class="mb-0">
+                        <i class="fas fa-motorcycle me-2"></i>
+                        Mottu
+                    </h1>
+                </div>
+                <div class="col-md-6 col-4">
+                    <div class="user-info justify-content-end">
+                        <span>Bem-vindo!</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+</div>
+<div xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+    <nav class="sidebar">
+        <div class="nav-section">
+            <div class="nav-title">Dashboard</div>
+            <a href="/dashboard" class="nav-link">
+                <i class="fas fa-tachometer-alt me-2"></i>Painel Principal
+            </a>
+        </div>
+
+        <!-- Seção CRUD - Gerenciamento -->
+        <div class="nav-section">
+            <div class="nav-title">Gerenciamento</div>
+
+            <!-- Motos -->
+            <a href="/motos" class="nav-link">
+                <i class="fas fa-motorcycle me-2"></i>Motos
+            </a>
+
+            <!-- Modelos -->
+            <a href="/modelos" class="nav-link" sec:authorize="hasAnyRole('ADMIN', 'OPERADOR')">
+                <i class="fas fa-cogs me-2"></i>Modelos
+            </a>
+
+            <!-- Pátios -->
+            <a href="/patios" class="nav-link" sec:authorize="hasAnyRole('ADMIN', 'OPERADOR')">
+                <i class="fas fa-warehouse me-2"></i>Pátios
+            </a>
+
+            <!-- Sensores IoT -->
+            <a href="/sensores" class="nav-link" sec:authorize="hasAnyRole('ADMIN', 'OPERADOR')">
+                <i class="fas fa-satellite-dish me-2"></i>Sensores IoT
+            </a>
+
+            <!-- Usuários - Apenas ADMIN -->
+            <a href="/usuarios" class="nav-link" sec:authorize="hasRole('ADMIN')">
+                <i class="fas fa-users me-2"></i>Usuários
+            </a>
+        </div>
+
+        <!-- Seção Monitoramento -->
+        <div class="nav-section">
+            <div class="nav-title">Monitoramento</div>
+
+            <!-- Alertas -->
+            <a href="/alertas" class="nav-link">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                Alertas
+                
+            </a>
+
+            <!-- Histórico de Posições -->
+            <a href="/historico" class="nav-link">
+                <i class="fas fa-map-marker-alt me-2"></i>Histórico
+            </a>
+        </div>
+
+        <!-- Seção Relatórios -->
+        <div class="nav-section">
+            <div class="nav-title">Relatórios</div>
+
+            <a href="/relatorios" class="nav-link" sec:authorize="hasAnyRole('ADMIN', 'OPERADOR')">
+                <i class="fas fa-chart-bar me-2"></i>Relatórios
+            </a>
+        </div>
+
+        <!-- Seção Configurações -->
+        <div class="nav-section" sec:authorize="hasRole('ADMIN')">
+            <div class="nav-title">Sistema</div>
+
+            <a href="/configuracoes" class="nav-link">
+                <i class="fas fa-cog me-2"></i>Configurações
+            </a>
+        </div>
+
+        <!-- Informações do Sistema -->
+        <div class="nav-section mt-auto">
+            <div class="nav-footer p-3">
+                <small class="text-muted">
+                    <div><strong>Mottu API</strong></div>
+                    <div>Versão 1.0.0</div>
+                    <div class="mt-2">
+                        <i class="fas fa-circle text-success me-1"></i>
+                        Sistema Online
+                    </div>
+                </small>
+            </div>
+        </div>
+    </nav>
+</div>
+<div>
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 mb-1">
+                    <i class="fas fa-warehouse me-2 text-primary"></i>
+                    <span>Novo Pátio</span>
+                </h1>
+                <p class="text-muted mb-0">
+                    
+                    <span>Cadastrar um novo pátio de estacionamento</span>
+                </p>
+            </div>
+            <div>
+                <a href="/patios" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Voltar
+                </a>
+            </div>
+        </div>
+
+        <!-- Formulário -->
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-body">
+                        <form action="/patios" 
+                              method="post" 
+                              novalidate 
+                              data-validate>
+                            <!-- CSRF token (Spring Security) -->
+                            

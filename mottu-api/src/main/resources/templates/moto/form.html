@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="pt-br" 
+      xmlns:th="http://www.thymeleaf.org" 
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" 
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout}">
+<head>
+    <title th:text="${moto.idMoto != null ? 'Editar Moto - ' + moto.placa : 'Nova Moto'} + ' - Mottu'">Nova Moto - Mottu</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 mb-1">
+                    <i class="fas fa-motorcycle me-2 text-primary"></i>
+                    <span th:text="${moto.idMoto != null ? 'Editar Moto' : 'Nova Moto'}">Nova Moto</span>
+                </h1>
+                <p class="text-muted mb-0">
+                    <span th:if="${moto.idMoto != null}">Editando dados da moto <strong th:text="${moto.placa}">ABC1234</strong></span>
+                    <span th:unless="${moto.idMoto != null}">Cadastrar uma nova moto no sistema</span>
+                </p>
+            </div>
+            <div>
+                <a th:href="@{/motos}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Voltar
+                </a>
+            </div>
+        </div>
+
+        <!-- Formulário -->
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-body">
+                        <form th:action="@{/motos/salvar}" method="post" th:object="${moto}" novalidate data-validate>
+                            <input type="hidden" th:field="*{idMoto}" />
+                            <!-- Placa -->
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="placa" class="form-label"><i class="fas fa-car me-1"></i>Placa *</label>
+                                    <input type="text" class="form-control" th:field="*{placa}" id="placa" placeholder="ABC1D23" maxlength="7" required th:classappend="${#fields.hasErrors('placa')} ? 'is-invalid'">
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('placa')}" th:errors="*{placa}">Erro na placa</div>
+                                </div>
+                                <!-- Ano de Fabricação -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="anoFabricacao" class="form-label"><i class="fas fa-calendar-alt me-1"></i>Ano de Fabricação *</label>
+                                    <input type="number" class="form-control" th:field="*{anoFabricacao}" id="anoFabricacao" placeholder="2023" min="1900" max="2100" required th:classappend="${#fields.hasErrors('anoFabricacao')} ? 'is-invalid'">
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('anoFabricacao')}" th:errors="*{anoFabricacao}">Erro no ano</div>
+                                </div>
+                            </div>
+                            <!-- Modelo e Pátio -->
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="modelo" class="form-label"><i class="fas fa-car-side me-1"></i>Modelo *</label>
+                                    <select class="form-select" th:field="*{modelo.idModelo}" id="modelo" required th:classappend="${#fields.hasErrors('modelo.idModelo')} ? 'is-invalid'">
+                                        <option value="" disabled th:selected="${moto.modelo == null}">Selecione o modelo</option>
+                                        <option th:each="modelo : ${modelos}" th:value="${modelo.idModelo}" th:text="${modelo.nomeModelo}" th:selected="${moto.modelo != null and moto.modelo.idModelo == modelo.idModelo}"></option>
+                                    </select>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('modelo.idModelo')}" th:errors="*{modelo.idModelo}">Erro no modelo</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="patio" class="form-label"><i class="fas fa-warehouse me-1"></i>Pátio *</label>
+                                    <select class="form-select" th:field="*{patio.idPatio}" id="patio" required th:classappend="${#fields.hasErrors('patio.idPatio')} ? 'is-invalid'">
+                                        <option value="" disabled th:selected="${moto.patio == null}">Selecione o pátio</option>
+                                        <option th:each="patio : ${patios}" th:value="${patio.idPatio}" th:text="${patio.nomePatio}" th:selected="${moto.patio != null and moto.patio.idPatio == patio.idPatio}"></option>
+                                    </select>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('patio.idPatio')}" th:errors="*{patio.idPatio}">Erro no pátio</div>
+                                </div>
+                            </div>
+                            <!-- Status -->
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="status" class="form-label"><i class="fas fa-toggle-on me-1"></i>Status *</label>
+                                    <select class="form-select" th:field="*{status}" id="status" required th:classappend="${#fields.hasErrors('status')} ? 'is-invalid'">
+                                        <option value="DISPONIVEL">Disponível</option>
+                                        <option value="ALUGADA">Alugada</option>
+                                        <option value="MANUTENCAO">Em Manutenção</option>
+                                    </select>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('status')}" th:errors="*{status}">Erro no status</div>
+                                </div>
+                            </div>
+                            <!-- Botões -->
+                            <div class="row mt-4">
+                                <div class="col-12">
+                                    <hr>
+                                    <div class="d-flex justify-content-between">
+                                        <a th:href="@{/motos}" class="btn btn-secondary"><i class="fas fa-times me-2"></i>Cancelar</a>
+                                        <button type="submit" class="btn btn-primary"><i class="fas fa-save me-2"></i><span th:text="${moto.idMoto != null ? 'Atualizar Moto' : 'Cadastrar Moto'}">Cadastrar Moto</span></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts específicos da página -->
+    <div layout:fragment="scripts">
+        <script>
+            // Toggle mostrar/ocultar senha
+            document.getElementById('toggleSenha').addEventListener('click', function() {
+                const senha = document.getElementById('senha');
+                const icon = this.querySelector('i');
+                
+                if (senha.type === 'password') {
+                    senha.type = 'text';
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                } else {
+                    senha.type = 'password';
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                }
+            });
+            
+            // Validar confirmação de senha
+            function validarSenhas() {
+                const senha = document.getElementById('senha').value;
+                const confirmarSenha = document.getElementById('confirmarSenha').value;
+                const erroDiv = document.getElementById('erro-confirmar-senha');
+                const confirmarInput = document.getElementById('confirmarSenha');
+                
+                if (confirmarSenha && senha !== confirmarSenha) {
+                    confirmarInput.classList.add('is-invalid');
+                    erroDiv.style.display = 'block';
+                    return false;
+                } else {
+                    confirmarInput.classList.remove('is-invalid');
+                    erroDiv.style.display = 'none';
+                    return true;
+                }
+            }
+            
+            document.getElementById('confirmarSenha').addEventListener('input', validarSenhas);
+            document.getElementById('senha').addEventListener('input', validarSenhas);
+            
+            // Atualizar prévia em tempo real
+            function atualizarPrevia() {
+                const modelo = document.getElementById('modelo').value || 'Modelo da Moto';
+                const marca = document.getElementById('marca').value || 'Marca da Moto';
+                const disponivel = document.getElementById('disponivel').checked;
+
+                // Atualizar avatar
+                document.getElementById('preview-avatar').textContent = modelo.charAt(0).toUpperCase();
+
+                // Atualizar informações
+                document.getElementById('preview-modelo').textContent = modelo;
+                document.getElementById('preview-marca').textContent = marca;
+
+                // Atualizar status
+                const statusBadge = document.getElementById('preview-status-badge');
+                const statusSpan = document.getElementById('preview-status');
+                const statusLabel = document.getElementById('status-label');
+                
+                if (disponivel) {
+                    statusBadge.className = 'badge ms-2 bg-success';
+                    statusSpan.textContent = 'Disponível';
+                    statusLabel.textContent = 'Moto Disponível';
+                } else {
+                    statusBadge.className = 'badge ms-2 bg-danger';
+                    statusSpan.textContent = 'Indisponível';
+                    statusLabel.textContent = 'Moto Indisponível';
+                }
+            }
+            
+            // Event listeners para atualização em tempo real
+            document.getElementById('modelo').addEventListener('input', atualizarPrevia);
+            document.getElementById('marca').addEventListener('input', atualizarPrevia);
+            document.getElementById('disponivel').addEventListener('change', atualizarPrevia);
+
+            // Inicializar prévia
+            document.addEventListener('DOMContentLoaded', atualizarPrevia);
+            
+            // Função para limpar formulário
+            function limparFormulario() {
+                if (confirm('Tem certeza que deseja limpar todos os campos?')) {
+                    document.querySelector('form').reset();
+                    document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+                    document.querySelectorAll('.is-valid').forEach(el => el.classList.remove('is-valid'));
+                    atualizarPrevia();
+                }
+            }
+            
+            // Validação no submit
+            document.querySelector('form').addEventListener('submit', function(e) {
+                if (!validarSenhas()) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+        </script>
+    </div>
+</body>
+</html>

@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="pt-br" 
+      xmlns:th="http://www.thymeleaf.org" 
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" 
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout}">
+<head>
+    <title th:text="${sensor.idSensorIot != null ? 'Editar Sensor IoT' : 'Novo Sensor IoT'} + ' - Mottu'">Novo Sensor IoT - Mottu</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 mb-1">
+                    <i class="fas fa-satellite-dish me-2 text-primary"></i>
+                    <span th:text="${sensor.idSensorIot != null ? 'Configurar Sensor IoT' : 'Novo Sensor IoT'}">Novo Sensor IoT</span>
+                </h1>
+                <p class="text-muted mb-0">
+                    <span th:if="${sensor.idSensorIot != null}">Editando configurações do sensor <strong th:text="'IOT-' + ${sensor.idSensorIot}">IOT-001</strong></span>
+                    <span th:unless="${sensor.idSensorIot != null}">Cadastrar e configurar um novo sensor IoT</span>
+                </p>
+            </div>
+            <div>
+                <a th:href="@{/sensores}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Voltar
+                </a>
+            </div>
+        </div>
+
+        <!-- Formulário -->
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-body">
+                        <form th:action="${sensor.idSensorIot != null ? '/sensores/' + sensor.idSensorIot : '/sensores'}" 
+                              th:method="${sensor.idSensorIot != null ? 'post' : 'post'}" 
+                              th:object="${sensor}" 
+                              novalidate 
+                              data-validate>
+                            
+                            <!-- Hidden field para ID (caso seja edição) -->
+                            <input type="hidden" th:field="*{idSensorIot}">
+                            
+                            <!-- Configurações Básicas -->
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <h5 class="card-title border-bottom pb-2">
+                                        <i class="fas fa-cog me-2"></i>Configurações Básicas do Sensor
+                                    </h5>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <!-- Tipo de Sensor -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="tipoSensor" class="form-label">
+                                        <i class="fas fa-microchip me-1"></i>Tipo de Sensor *
+                                    </label>
+                                    <select class="form-select" 
+                                            th:field="*{tipoSensor}" 
+                                            id="tipoSensor" 
+                                            required
+                                            th:classappend="${#fields.hasErrors('tipoSensor')} ? 'is-invalid'">
+                                        <option value="">Selecione o tipo</option>
+                                        <option value="GPS">GPS - Rastreamento de localização</option>
+                                        <option value="ACELEROMETRO">Acelerômetro - Movimento e inclinação</option>
+                                        <option value="TEMPERATURA">Temperatura - Monitoramento térmico</option>
+                                        <option value="VELOCIDADE">Velocidade - Controle de velocidade</option>
+                                        <option value="COMBUSTIVEL">Combustível - Nível do tanque</option>
+                                        <option value="VIBACAO">Vibração - Detecção de anomalias</option>
+                                    </select>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('tipoSensor')}" th:errors="*{tipoSensor}">
+                                        Erro no tipo de sensor
+                                    </div>
+                                    <div class="form-text" id="tipo-descricao">Selecione o tipo para ver as características</div>
+                                </div>
+                                
+                                <!-- Bateria Percentual -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="bateriaPercentual" class="form-label">
+                                        <i class="fas fa-battery-three-quarters me-1"></i>Nível da Bateria (%) *
+                                    </label>
+                                    <div class="input-group">
+                                        <input type="range" 
+                                               class="form-range" 
+                                               th:field="*{bateriaPercentual}" 
+                                               id="bateriaPercentual" 
+                                               min="0" 
+                                               max="100" 
+                                               step="1"
+                                               required
+                                               style="margin-top: 10px;"
+                                               th:classappend="${#fields.hasErrors('bateriaPercentual')} ? 'is-invalid'">
+                                        <input type="number" 
+                                               class="form-control" 
+                                               id="bateriaNumero"
+                                               min="0" 
+                                               max="100" 
+                                               readonly
+                                               style="max-width: 80px;">
+                                        <span class="input-group-text">%</span>
+                                    </div>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('bateriaPercentual')}" th:errors="*{bateriaPercentual}">
+                                        Erro no nível da bateria
+                                    </div>
+                                    <div class="form-text">
+                                        <span id="status-bateria" class="badge">Status da bateria</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Data de Transmissão -->
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="dataTransmissao" class="form-label">
+                                        <i class="fas fa-calendar-alt me-1"></i>Data da Última Transmissão
+                                    </label>
+                                    <input type="datetime-local" 
+                                           class="form-control" 
+                                           th:field="*{dataTransmissao}" 
+                                           id="dataTransmissao"
+                                           th:classappend="${#fields.hasErrors('dataTransmissao')} ? 'is-invalid'">
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('dataTransmissao')}" th:errors="*{dataTransmissao}">
+                                        Erro na data
+                                    </div>
+                                    <div class="form-text">Deixe em branco se for um sensor novo</div>
+                                </div>
+                                
+                                <!-- Moto Associada -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="moto" class="form-label">
+                                        <i class="fas fa-motorcycle me-1"></i>Moto Associada
+                                    </label>
+                                    <select class="form-select" th:field="*{moto.idMoto}" id="moto">
+                                        <option value="">Nenhuma moto (sensor livre)</option>
+                                        <option th:each="moto : ${motos}" 
+                                                th:value="${moto.idMoto}" 
+                                                th:text="${moto.placa + ' - ' + (moto.modelo != null ? moto.modelo.fabricante + ' ' + moto.modelo.nomeModelo : 'Sem modelo')}">
+                                            ABC1234 - Honda CB600F
+                                        </option>
+                                    </select>
+                                    <div class="form-text">Sensor pode ser associado posteriormente</div>
+                                </div>
+                            </div>
+                            
+                            <!-- Características do Sensor -->
+                            <div class="row mb-4" id="caracteristicas-sensor" style="display: none;">
+                                <div class="col-12">
+                                    <h5 class="card-title border-bottom pb-2">
+                                        <i class="fas fa-info-circle me-2"></i>Características do Sensor
+                                    </h5>
+                                    <div class="card bg-light">
+                                        <div class="card-body">
+                                            <div id="info-sensor">
+                                                <!-- Será preenchido via JavaScript -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Configurações Avançadas -->
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <h5 class="card-title border-bottom pb-2">
+                                        <i class="fas fa-sliders-h me-2"></i>Configurações Avançadas
+                                    </h5>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label for="intervaloTransmissao" class="form-label">
+                                        <i class="fas fa-clock me-1"></i>Intervalo de Transmissão
+                                    </label>
+                                    <select class="form-select" id="intervaloTransmissao">
+                                        <option value="10">10 segundos (Tempo real)</option>
+                                        <option value="30" selected>30 segundos (Padrão)</option>
+                                        <option value="60">1 minuto (Economia)</option>
+                                        <option value="300">5 minutos (Bateria baixa)</option>
+                                        <option value="600">10 minutos (Standby)</option>
+                                    </select>
+                                    <div class="form-text">Frequência de envio de dados</div>
+                                </div>
+                                
+                                <div class="col-md-4 mb-3">
+                                    <label for="precisaoGps" class="form-label">
+                                        <i class="fas fa-crosshairs me-1"></i>Precisão GPS
+                                    </label>
+                                    <select class="form-select" id="precisaoGps">
+                                        <option value="alta">Alta precisão (±1-3m)</option>
+                                        <option value="media" selected>Média precisão (±3-10m)</option>
+                                        <option value="baixa">Baixa precisão (±10-20m)</option>
+                                    </select>
+                                    <div class="form-text">Balancear precisão vs bateria</div>
+                                </div>
+                                
+                                <div class="col-md-4 mb-3">
+                                    <label for="modoEconomia" class="form-label">
+                                        <i class="fas fa-leaf me-1"></i>Modo Economia
+                                    </label>
+                                    <div class="form-check form-switch mt-2">
+                                        <input class="form-check-input" type="checkbox" id="modoEconomia">
+                                        <label class="form-check-label" for="modoEconomia">
+                                            Ativar economia de bateria
+                                        </label>
+                                    </div>
+                                    <div class="form-text">Reduz frequência quando parado</div>
+                                </div>
+                            </div>
+                            
+                            <!-- Prévia do Sensor -->
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <h5 class="card-title border-bottom pb-2">
+                                        <i class="fas fa-eye me-2"></i>Prévia do Sensor
+                                    </h5>
+                                    <div class="card bg-light">
+                                        <div class="card-body">
+                                            <div class="row align-items-center">
+                                                <div class="col-md-2 text-center">
+                                                    <i class="fas fa-microchip fa-3x text-info"></i>
+                                                </div>
+                                                <div class="col-md-10">
+                                                    <h6 class="card-title mb-1">
+                                                        Sensor <span id="preview-id">IOT-000</span>
+                                                    </h6>
+                                                    <p class="card-text mb-2">
+                                                        <span class="badge me-2" id="preview-tipo-badge">
+                                                            <span id="preview-tipo">Tipo</span>
+                                                        </span>
+                                                        <span class="badge" id="preview-bateria-badge">
+                                                            <i class="fas fa-battery-three-quarters me-1"></i>
+                                                            <span id="preview-bateria">0%</span>
+                                                        </span>
+                                                    </p>
+                                                    <p class="card-text mb-0">
+                                                        <small class="text-muted">
+                                                            <i class="fas fa-motorcycle me-1"></i>
+                                                            <span id="preview-moto">Nenhuma moto associada</span>
+                                                        </small>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Botões -->
+                            <div class="row mt-4">
+                                <div class="col-12">
+                                    <hr>
+                                    <div class="d-flex justify-content-between">
+                                        <a th:href="@{/sensores}" class="btn btn-secondary">
+                                            <i class="fas fa-times me-2"></i>Cancelar
+                                        </a>
+                                        <div>
+                                            <button type="button" class="btn btn-outline-info me-2" onclick="testarConexao()">
+                                                <i class="fas fa-wifi me-2"></i>Testar Conexão
+                                            </button>
+                                            <button type="button" class="btn btn-outline-primary me-2" onclick="limparFormulario()">
+                                                <i class="fas fa-eraser me-2"></i>Limpar
+                                            </button>
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="fas fa-save me-2"></i>
+                                                <span th:text="${sensor.idSensorIot != null ? 'Atualizar Sensor' : 'Cadastrar Sensor'}">Cadastrar Sensor</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal de Teste de Conexão -->
+        <div class="modal fade" id="modalTesteConexao" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-wifi text-info me-2"></i>
+                            Teste de Conexão
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="text-center">
+                            <div class="mb-3">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Testando...</span>
+                                </div>
+                            </div>
+                            <p>Verificando conectividade do sensor...</p>
+                            <div id="resultado-conexao" style="display: none;">
+                                <div class="alert alert-success">
+                                    <i class="fas fa-check-circle me-2"></i>
+                                    <strong>Conexão estabelecida!</strong><br>
+                                    Sensor respondeu em 240ms
+                                </div>
+                                <div class="row text-center">
+                                    <div class="col-4">
+                                        <small class="text-muted">Latência</small>
+                                        <div class="fw-bold">240ms</div>
+                                    </div>
+                                    <div class="col-4">
+                                        <small class="text-muted">Sinal</small>
+                                        <div class="fw-bold text-success">Forte</div>
+                                    </div>
+                                    <div class="col-4">
+                                        <small class="text-muted">Bateria</small>
+                                        <div class="fw-bold text-success">85%</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-2"></i>Fechar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts específicos da página -->
+    <div layout:fragment="scripts">
+        <script>
+            // Sincronizar slider com input numérico
+            document.getElementById('bateriaPercentual').addEventListener('input', function() {
+                const valor = this.value;
+                document.getElementById('bateriaNumero').value = valor;
+                atualizarStatusBateria(valor);
+                atualizarPrevia();
+            });
+            
+            function atualizarStatusBateria(percentual) {
+                const badge = document.getElementById('status-bateria');
+                
+                if (percentual >= 80) {
+                    badge.textContent = 'Excelente';
+                    badge.className = 'badge bg-success';
+                } else if (percentual >= 50) {
+                    badge.textContent = 'Boa';
+                    badge.className = 'badge bg-primary';
+                } else if (percentual >= 20) {
+                    badge.textContent = 'Baixa';
+                    badge.className = 'badge bg-warning';
+                } else {
+                    badge.textContent = 'Crítica';
+                    badge.className = 'badge bg-danger';
+                }
+            }
+            
+            // Atualizar descrição do tipo de sensor
+            document.getElementById('tipoSensor').addEventListener('change', function() {
+                const tipo = this.value;
+                const descricao = document.getElementById('tipo-descricao');
+                const caracteristicas = document.getElementById('caracteristicas-sensor');
+                const infoSensor = document.getElementById('info-sensor');
+                
+                let texto = '';
+                let info = '';
+                
+                switch(tipo) {
+                    case 'GPS':
+                        texto = 'Rastreamento de localização em tempo real com coordenadas precisas';
+                        info = `
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 class="text-primary">Funcionalidades:</h6>
+                                    <ul class="list-unstyled">
+                                        <li><i class="fas fa-check text-success me-2"></i>Localização em tempo real</li>
+                                        <li><i class="fas fa-check text-success me-2"></i>Histórico de rotas</li>
+                                        <li><i class="fas fa-check text-success me-2"></i>Geo-cercas (geo-fencing)</li>
+                                        <li><i class="fas fa-check text-success me-2"></i>Alertas de área</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="text-primary">Especificações:</h6>
+                                    <ul class="list-unstyled">
+                                        <li><small>Precisão: ±1-3 metros</small></li>
+                                        <li><small>Atualização: 1-30 segundos</small></li>
+                                        <li><small>Bateria: 7-15 dias</small></li>
+                                        <li><small>Conectividade: 4G/WiFi</small></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        `;
+                        caracteristicas.style.display = 'block';
+                        break;
+                    case 'ACELEROMETRO':
+                        texto = 'Detecção de movimento, inclinação e impactos';
+                        info = `
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 class="text-primary">Funcionalidades:</h6>
+                                    <ul class="list-unstyled">
+                                        <li><i class="fas fa-check text-success me-2"></i>Detecção de movimento</li>
+                                        <li><i class="fas fa-check text-success me-2"></i>Alerta de queda</li>
+                                        <li><i class="fas fa-check text-success me-2"></i>Inclinação da moto</li>
+                                        <li><i class="fas fa-check text-success me-2"></i>Padrões de condução</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="text-primary">Especificações:</h6>
+                                    <ul class="list-unstyled">
+                                        <li><small>3 eixos (X, Y, Z)</small></li>
+                                        <li><small>Sensibilidade: 0.01g</small></li>
+                                        <li><small>Frequência: 100Hz</small></li>
+                                        <li><small>Detecção: ±16g</small></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        `;
+                        caracteristicas.style.display = 'block';
+                        break;
+                    case 'TEMPERATURA':
+                        texto = 'Monitoramento térmico do motor e componentes';
+                        info = `
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 class="text-primary">Funcionalidades:</h6>
+                                    <ul class="list-unstyled">
+                                        <li><i class="fas fa-check text-success me-2"></i>Temperatura do motor</li>
+                                        <li><i class="fas fa-check text-success me-2"></i>Alerta de superaquecimento</li>
+                                        <li><i class="fas fa-check text-success me-2"></i>Monitoramento contínuo</li>
+                                        <li><i class="fas fa-check text-success me-2"></i>Histórico térmico</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="text-primary">Especificações:</h6>
+                                    <ul class="list-unstyled">
+                                        <li><small>Faixa: -40°C a +150°C</small></li>
+                                        <li><small>Precisão: ±0.5°C</small></li>
+                                        <li><small>Resposta: 2 segundos</small></li>
+                                        <li><small>À prova d'água: IP67</small></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        `;
+                        caracteristicas.style.display = 'block';
+                        break;
+                    default:
+                        texto = 'Selecione um tipo para ver as características';
+                        caracteristicas.style.display = 'none';
+                }
+                
+                descricao.textContent = texto;
+                infoSensor.innerHTML = info;
+                atualizarPrevia();
+            });
+            
+            // Atualizar prévia em tempo real
+            function atualizarPrevia() {
+                const id = document.querySelector('input[name="idSensorIot"]').value || '000';
+                const tipo = document.getElementById('tipoSensor').value || 'Tipo';
+                const bateria = document.getElementById('bateriaPercentual').value || '0';
+                const motoSelect = document.getElementById('moto');
+                const motoTexto = motoSelect.selectedOptions[0]?.text || 'Nenhuma moto associada';
+                
+                // Atualizar ID
+                document.getElementById('preview-id').textContent = 'IOT-' + String(id).padStart(3, '0');
+                
+                // Atualizar tipo
+                document.getElementById('preview-tipo').textContent = tipo;
+                const tipoBadge = document.getElementById('preview-tipo-badge');
+                tipoBadge.className = 'badge me-2 ';
+                switch(tipo) {
+                    case 'GPS':
+                        tipoBadge.className += 'bg-primary';
+                        break;
+                    case 'ACELEROMETRO':
+                        tipoBadge.className += 'bg-success';
+                        break;
+                    case 'TEMPERATURA':
+                        tipoBadge.className += 'bg-warning';
+                        break;
+                    default:
+                        tipoBadge.className += 'bg-secondary';
+                }
+                
+                // Atualizar bateria
+                document.getElementById('preview-bateria').textContent = bateria + '%';
+                const bateriaBadge = document.getElementById('preview-bateria-badge');
+                bateriaBadge.className = 'badge ';
+                if (bateria >= 80) {
+                    bateriaBadge.className += 'bg-success';
+                } else if (bateria >= 50) {
+                    bateriaBadge.className += 'bg-primary';
+                } else if (bateria >= 20) {
+                    bateriaBadge.className += 'bg-warning';
+                } else {
+                    bateriaBadge.className += 'bg-danger';
+                }
+                
+                // Atualizar moto
+                document.getElementById('preview-moto').textContent = motoTexto;
+            }
+            
+            // Event listeners
+            document.getElementById('moto').addEventListener('change', atualizarPrevia);
+            
+            // Função para testar conexão
+            function testarConexao() {
+                const modal = new bootstrap.Modal(document.getElementById('modalTesteConexao'));
+                modal.show();
+                
+                // Simular teste
+                setTimeout(() => {
+                    document.querySelector('.spinner-border').style.display = 'none';
+                    document.getElementById('resultado-conexao').style.display = 'block';
+                }, 3000);
+            }
+            
+            // Função para limpar formulário
+            function limparFormulario() {
+                if (confirm('Tem certeza que deseja limpar todos os campos?')) {
+                    document.querySelector('form').reset();
+                    document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+                    document.getElementById('caracteristicas-sensor').style.display = 'none';
+                    atualizarPrevia();
+                    atualizarStatusBateria(0);
+                }
+            }
+            
+            // Inicializar
+            document.addEventListener('DOMContentLoaded', function() {
+                const bateria = document.getElementById('bateriaPercentual').value || 0;
+                document.getElementById('bateriaNumero').value = bateria;
+                atualizarStatusBateria(bateria);
+                atualizarPrevia();
+                
+                // Trigger para mostrar características se já houver tipo selecionado
+                const tipoAtual = document.getElementById('tipoSensor').value;
+                if (tipoAtual) {
+                    document.getElementById('tipoSensor').dispatchEvent(new Event('change'));
+                }
+            });
+        </script>
+    </div>
+</body>
+</html>

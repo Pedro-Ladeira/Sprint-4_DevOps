@@ -1,0 +1,13 @@
+uversion: '3.8'
+
+services:
+  mottu-api:
+    environment:
+      - SPRING_PROFILES_ACTIVE=h2
+    ports:
+      - "8080:8080"
+    # Use local build by default when running in dev
+    build:
+      context: ./mottu-api
+      dockerfile: Dockerfile
+

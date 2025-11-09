@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout}">
+<head>
+    <title>Gerenciamento de Pátios - Mottu</title>
+</head>
+<body>
+<div layout:fragment="content">
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 mb-1">
+                    <i class="fas fa-warehouse me-2 text-primary"></i>
+                    Gerenciamento de Pátios
+                </h1>
+                <p class="text-muted mb-0">Lista e controle de todos os pátios de estacionamento</p>
+            </div>
+            <div>
+                <a th:href="@{/patios/novo}" class="btn btn-primary" sec:authorize="hasRole('ADMIN')">
+                    <i class="fas fa-plus me-2"></i>Novo Pátio
+                </a>
+            </div>
+        </div>
+
+        <!-- Cards de Estatísticas -->
+        <div class="row mb-4">
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title">Total de Pátios</h6>
+                                <h3 th:text="${patios != null ? patios.size() : 0}">0</h3>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-warehouse fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title">Pátios Disponíveis</h6>
+                                <h3 id="patios-disponiveis">0</h3>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-check-circle fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card bg-info text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title">Capacidade Total</h6>
+                                <h3 id="capacidade-total">0</h3>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-expand-arrows-alt fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card bg-warning text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title">Taxa Ocupação</h6>
+                                <h3 id="taxa-media">0%</h3>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-percentage fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtros e Busca -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form th:action="@{/patios}" method="get" class="row g-3">
+                    <div class="col-md-4">
+                        <label for="nome" class="form-label">Nome do Pátio</label>
+                        <input type="text" class="form-control" id="nome" name="nome" 
+                               th:value="${nome}" placeholder="Pátio Central, etc.">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="localizacao" class="form-label">Localização</label>
+                        <input type="text" class="form-control" id="localizacao" name="localizacao" 
+                               th:value="${localizacao}" placeholder="São Paulo, Rio...">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="status" class="form-label">Status de Ocupação</label>
+                        <select class="form-select" id="status" name="status">
+                            <option value="">Todos</option>
+                            <option value="disponivel" th:selected="${status == 'disponivel'}">Disponível</option>
+                            <option value="ocupado" th:selected="${status == 'ocupado'}">Alta Ocupação</option>
+                            <option value="lotado" th:selected="${status == 'lotado'}">Lotado</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-outline-primary me-2">
+                            <i class="fas fa-search me-1"></i>Filtrar
+                        </button>
+                        <a th:href="@{/patios}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times"></i>
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Tabela de Pátios -->
+        <div class="card">
+            <div class="card-body">
+                <div th:if="${patios != null and !#lists.isEmpty(patios)}">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Nome do Pátio</th>
+                                    <th>Localização</th>
+                                    <th>Área Total</th>
+                                    <th>Capacidade</th>
+                                    <th>Ocupação Atual</th>
+                                    <th>Status</th>
+                                    <th sec:authorize="hasRole('ADMIN')">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="patio : ${patios}">
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="me-3">
+                                                <i class="fas fa-warehouse fa-2x text-primary"></i>
+                                            </div>
+                                            <div>
+                                                <strong th:text="${patio.nomePatio}">Pátio Central SP</strong>
+                                                <br>
+                                                <small class="text-muted">ID: <span th:text="${patio.idPatio}">1</span></small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <i class="fas fa-map-marker-alt me-1 text-danger"></i>
+                                        <span th:text="${patio.localizacaoPatio}">São Paulo - Centro</span>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-expand me-2 text-info"></i>
+                                            <span th:text="${patio.areaTotal}">1500.50</span> m²
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info fs-6">
+                                            <i class="fas fa-motorcycle me-1"></i>
+                                            <span th:text="${patio.capacidadeMaxima}">50</span> vagas
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="progress me-2" style="width: 100px; height: 20px;">
+                                                <div class="progress-bar" 
+                                                     th:style="'width: ' + ${(patio.motos != null ? patio.motos.size() : 0) * 100.0 / patio.capacidadeMaxima} + '%'"
+                                                     th:classappend="${(patio.motos != null ? patio.motos.size() : 0) * 100.0 / patio.capacidadeMaxima >= 90 ? 'bg-danger' : 
+                                                                    ((patio.motos != null ? patio.motos.size() : 0) * 100.0 / patio.capacidadeMaxima >= 70 ? 'bg-warning' : 'bg-success')}">
+                                                </div>
+                                            </div>
+                                            <small class="text-muted">
+                                                <span th:text="${patio.motos != null ? patio.motos.size() : 0}">0</span>/<span th:text="${patio.capacidadeMaxima}">50</span>
+                                            </small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span th:switch="${(patio.motos != null ? patio.motos.size() : 0) * 100 / patio.capacidadeMaxima}">
+                                            <span th:case="#{(patio.motos != null ? patio.motos.size() : 0) * 100 / patio.capacidadeMaxima >= 100}" 
+                                                  class="badge bg-danger">
+                                                <i class="fas fa-exclamation-triangle me-1"></i>Lotado
+                                            </span>
+                                            <span th:case="#{(patio.motos != null ? patio.motos.size() : 0) * 100 / patio.capacidadeMaxima >= 80}" 
+                                                  class="badge bg-warning">
+                                                <i class="fas fa-exclamation me-1"></i>Alto
+                                            </span>
+                                            <span th:case="*" class="badge bg-success">
+                                                <i class="fas fa-check me-1"></i>Disponível
+                                            </span>
+                                        </span>
+                                    </td>
+                                    <td sec:authorize="hasRole('ADMIN')">
+                                        <div class="btn-group" role="group">
+                                            <a th:href="@{/patios/{id}(id=${patio.idPatio})}" 
+                                               class="btn btn-sm btn-outline-info" title="Visualizar">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a th:href="@{/patios/{id}/editar(id=${patio.idPatio})}" 
+                                               class="btn btn-sm btn-outline-warning" title="Editar">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                    title="Excluir"
+                                                    th:onclick="'confirmarExclusao(' + ${patio.idPatio} + ', \'' + ${patio.nomePatio} + '\')'">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Lista Vazia -->
+                <div th:if="${patios == null or #lists.isEmpty(patios)}" class="text-center py-5">
+                    <div class="mb-4">
+                        <i class="fas fa-warehouse fa-4x text-muted"></i>
+                    </div>
+                    <h4 class="text-muted">Nenhum pátio encontrado</h4>
+                    <p class="text-muted mb-4">
+                        <span th:if="${nome != null and !nome.isEmpty()}">
+                            Não foi possível encontrar pátios com o nome "<strong th:text="${nome}"></strong>".
+                        </span>
+                        <span th:unless="${nome != null and !nome.isEmpty()}">
+                            Ainda não há pátios cadastrados no sistema.
+                        </span>
+                    </p>
+                    <div>
+                        <a th:href="@{/patios/novo}" class="btn btn-primary" sec:authorize="hasRole('ADMIN')">
+                            <i class="fas fa-plus me-2"></i>Cadastrar primeiro pátio
+                        </a>
+                        <a th:href="@{/patios}" class="btn btn-outline-secondary" th:if="${nome != null and !nome.isEmpty()}">
+                            <i class="fas fa-times me-2"></i>Limpar filtros
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal de Confirmação de Exclusão -->
+        <div class="modal fade" id="modalExclusao" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-exclamation-triangle text-danger me-2"></i>
+                            Confirmar Exclusão
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Tem certeza que deseja excluir o pátio <strong id="nomeExclusao"></strong>?</p>
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Atenção:</strong> Esta ação não pode ser desfeita e pode afetar motos localizadas neste pátio.
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-2"></i>Cancelar
+                        </button>
+                        <form id="formExclusao" method="post" style="display: inline;">
+                            <input type="hidden" name="_method" value="DELETE">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash me-2"></i>Excluir Pátio
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts específicos da página -->
+    <div layout:fragment="scripts">
+        <script>
+            function confirmarExclusao(id, nome) {
+                document.getElementById('nomeExclusao').textContent = nome;
+                document.getElementById('formExclusao').action = '/patios/' + id;
+                new bootstrap.Modal(document.getElementById('modalExclusao')).show();
+            }
+            
+            // Calcular estatísticas
+            document.addEventListener('DOMContentLoaded', function() {
+                const rows = document.querySelectorAll('tbody tr');
+                let patiosDisponiveis = 0;
+                let capacidadeTotal = 0;
+                let ocupacaoTotal = 0;
+                
+                rows.forEach(row => {
+                    // Verificar status
+                    const statusBadge = row.querySelector('td:nth-child(6) .badge');
+                    if (statusBadge && statusBadge.textContent.includes('Disponível')) {
+                        patiosDisponiveis++;
+                    }
+                    
+                    // Capacidade
+                    const capacidadeText = row.querySelector('td:nth-child(4) .badge span').textContent;
+                    const capacidade = parseInt(capacidadeText);
+                    capacidadeTotal += capacidade;
+                    
+                    // Ocupação
+                    const ocupacaoText = row.querySelector('td:nth-child(5) small').textContent;
+                    const ocupado = parseInt(ocupacaoText.split('/')[0]);
+                    ocupacaoTotal += ocupado;
+                });
+                
+                document.getElementById('patios-disponiveis').textContent = patiosDisponiveis;
+                document.getElementById('capacidade-total').textContent = capacidadeTotal;
+                
+                const taxaMedia = capacidadeTotal > 0 ? Math.round((ocupacaoTotal / capacidadeTotal) * 100) : 0;
+                document.getElementById('taxa-media').textContent = taxaMedia + '%';
+            });
+        </script>
+    </div>
+</body>
+</html>

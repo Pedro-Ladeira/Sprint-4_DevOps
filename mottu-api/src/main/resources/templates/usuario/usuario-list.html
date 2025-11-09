@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout}">
+<head>
+    <title>Gerenciamento de Usuários - Mottu</title>
+</head>
+<body>
+<div layout:fragment="content">
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 mb-1">
+                    <i class="fas fa-users me-2 text-primary"></i>
+                    Gerenciamento de Usuários
+                </h1>
+                <p class="text-muted mb-0">Lista e controle de todos os usuários do sistema</p>
+            </div>
+            <div>
+                <!-- Botão Novo Usuário protegido -->
+                <a th:href="@{/usuarios/novo}" class="btn btn-primary" sec:authorize="hasRole('ADMIN')">
+                    <i class="fas fa-user-plus me-2"></i>Novo Usuário
+                </a>
+            </div>
+        </div>
+
+        <!-- Cards de Estatísticas -->
+        <div class="row mb-4">
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title">Total Usuários</h6>
+                                <h3 th:text="${usuarios != null ? usuarios.size() : 0}">0</h3>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-users fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title">Usuários Ativos</h6>
+                                <h3 id="usuarios-ativos">0</h3>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-user-check fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card bg-danger text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title">Administradores</h6>
+                                <h3 id="admins">0</h3>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-user-shield fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card bg-info text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title">Operadores</h6>
+                                <h3 id="operadores">0</h3>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-user-cog fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtros e Busca -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form th:action="@{/usuarios}" method="get" class="row g-3">
+                    <div class="col-md-4">
+                        <label for="nome" class="form-label">Nome do Usuário</label>
+                        <input type="text" class="form-control" id="nome" name="nome" 
+                               th:value="${nome}" placeholder="João Silva">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="perfil" class="form-label">Perfil</label>
+                        <select class="form-select" id="perfil" name="perfil">
+                            <option value="">Todos os Perfis</option>
+                            <option value="ADMIN" th:selected="${perfil == 'ADMIN'}">Administrador</option>
+                            <option value="OPERADOR" th:selected="${perfil == 'OPERADOR'}">Operador</option>
+                            <option value="MANUTENCAO" th:selected="${perfil == 'MANUTENCAO'}">Manutenção</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="status" class="form-label">Status</label>
+                        <select class="form-select" id="status" name="status">
+                            <option value="">Todos os Status</option>
+                            <option value="true" th:selected="${status == 'true'}">Ativos</option>
+                            <option value="false" th:selected="${status == 'false'}">Inativos</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-outline-primary me-2">
+                            <i class="fas fa-search me-1"></i>Filtrar
+                        </button>
+                        <a th:href="@{/usuarios}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times"></i>
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Tabela de Usuários -->
+        <div class="card">
+            <div class="card-body">
+                <div th:if="${usuarios != null and !#lists.isEmpty(usuarios)}">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Usuário</th>
+                                    <th>Email</th>
+                                    <th>Perfil</th>
+                                    <th>Status</th>
+                                    <th>Último Acesso</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="usuario : ${usuarios}">
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar me-3">
+                                                <div class="rounded-circle d-flex align-items-center justify-content-center text-white"
+                                                     th:classappend="${usuario.ativo ? 'bg-primary' : 'bg-secondary'}"
+                                                     style="width: 45px; height: 45px;">
+                                                    <span class="fw-bold" th:text="${#strings.substring(usuario.nome, 0, 1).toUpperCase()}">U</span>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold" th:text="${usuario.nome}">Nome do Usuário</div>
+                                                <small class="text-muted">ID: <span th:text="${usuario.idUsuario}">1</span></small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <i class="fas fa-envelope me-2 text-muted"></i>
+                                            <span th:text="${usuario.email}">usuario@mottu.com</span>
+                                        </div>
+                                        <small class="text-muted">Login principal</small>
+                                    </td>
+                                    <td>
+                                        <span th:switch="${usuario.perfil}">
+                                            <span th:case="'ADMIN'" class="badge bg-danger fs-6">
+                                                <i class="fas fa-user-shield me-1"></i>Administrador
+                                            </span>
+                                            <span th:case="'OPERADOR'" class="badge bg-primary fs-6">
+                                                <i class="fas fa-user-cog me-1"></i>Operador
+                                            </span>
+                                            <span th:case="'MANUTENCAO'" class="badge bg-warning fs-6">
+                                                <i class="fas fa-user-tag me-1"></i>Manutenção
+                                            </span>
+                                            <span th:case="*" class="badge bg-secondary fs-6" th:text="${usuario.perfil}">
+                                                Perfil
+                                            </span>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <span th:if="${usuario.ativo}" class="badge bg-success">
+                                                <i class="fas fa-check-circle me-1"></i>Ativo
+                                            </span>
+                                            <span th:unless="${usuario.ativo}" class="badge bg-danger">
+                                                <i class="fas fa-times-circle me-1"></i>Inativo
+                                            </span>
+                                        </div>
+                                        <small th:if="${!usuario.ativo}" class="text-muted d-block">Sem acesso ao sistema</small>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <i class="fas fa-clock me-1 text-muted"></i>
+                                            <span th:text="${#temporals.format(#temporals.createNow(), 'dd/MM/yyyy')}">Hoje</span>
+                                        </div>
+                                        <small class="text-muted">14:30</small>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a th:href="@{/usuarios/{id}(id=${usuario.idUsuario})}" 
+                                               class="btn btn-sm btn-outline-info" title="Visualizar perfil">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a th:href="@{/usuarios/{id}/editar(id=${usuario.idUsuario})}" 
+                                               class="btn btn-sm btn-outline-warning" title="Editar dados">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            
+                                            <!-- Botão Ativar/Desativar -->
+                                            <form th:action="@{/usuarios/{id}/ativar-desativar(id=${usuario.idUsuario})}" 
+                                                  method="post" class="d-inline">
+                                                <input type="hidden" name="ativo" th:value="${!usuario.ativo}">
+                                                <button type="submit" 
+                                                        class="btn btn-sm"
+                                                        th:classappend="${usuario.ativo ? 'btn-outline-warning' : 'btn-outline-success'}"
+                                                        th:title="${usuario.ativo ? 'Desativar usuário' : 'Ativar usuário'}">
+                                                    <i th:class="${usuario.ativo ? 'fas fa-user-slash' : 'fas fa-user-check'}"></i>
+                                                </button>
+                                            </form>
+                                            
+                                            <div class="btn-group">
+                                                <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle dropdown-toggle-split" 
+                                                        data-bs-toggle="dropdown">
+                                                    <i class="fas fa-ellipsis-v"></i>
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="dropdown-item" href="#" onclick="resetarSenha()">
+                                                        <i class="fas fa-key me-2"></i>Resetar Senha
+                                                    </a></li>
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li><a class="dropdown-item text-danger" href="#" 
+                                                           th:onclick="'confirmarExclusao(' + ${usuario.idUsuario} + ', \'' + ${usuario.nome} + '\')'">
+                                                        <i class="fas fa-trash me-2"></i>Excluir Usuário
+                                                    </a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Lista Vazia -->
+                <div th:if="${usuarios == null or #lists.isEmpty(usuarios)}" class="text-center py-5">
+                    <div class="mb-4">
+                        <i class="fas fa-users fa-4x text-muted"></i>
+                    </div>
+                    <h4 class="text-muted">Nenhum usuário encontrado</h4>
+                    <p class="text-muted mb-4">
+                        <span th:if="${nome != null and !nome.isEmpty()}">
+                            Não foi possível encontrar usuários com o nome "<strong th:text="${nome}"></strong>".
+                        </span>
+                        <span th:unless="${nome != null and !nome.isEmpty()}">
+                            Ainda não há usuários cadastrados no sistema.
+                        </span>
+                    </p>
+                    <div>
+                        <a th:href="@{/usuarios/novo}" class="btn btn-primary">
+                            <i class="fas fa-user-plus me-2"></i>Cadastrar primeiro usuário
+                        </a>
+                        <a th:href="@{/usuarios}" class="btn btn-outline-secondary" th:if="${nome != null and !nome.isEmpty()}">
+                            <i class="fas fa-times me-2"></i>Limpar filtros
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal de Confirmação de Exclusão -->
+        <div class="modal fade" id="modalExclusao" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-exclamation-triangle text-danger me-2"></i>
+                            Confirmar Exclusão
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Tem certeza que deseja excluir o usuário <strong id="nomeExclusao"></strong>?</p>
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Atenção:</strong> Esta ação não pode ser desfeita e o usuário perderá completamente o acesso ao sistema.
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="confirmarExclusaoCheck">
+                            <label class="form-check-label" for="confirmarExclusaoCheck">
+                                Confirmo que desejo excluir permanentemente este usuário
+                            </label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-2"></i>Cancelar
+                        </button>
+                        <form id="formExclusao" method="post" style="display: inline;">
+                            <input type="hidden" name="_method" value="DELETE">
+                            <button type="submit" class="btn btn-danger" id="btnConfirmarExclusao" disabled>
+                                <i class="fas fa-trash me-2"></i>Excluir Usuário
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal de Reset de Senha -->
+        <div class="modal fade" id="modalResetSenha" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-key text-warning me-2"></i>
+                            Resetar Senha
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Será gerada uma nova senha temporária para o usuário.</p>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            O usuário receberá um email com a nova senha e será solicitado a alterá-la no primeiro login.
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-2"></i>Cancelar
+                        </button>
+                        <button type="button" class="btn btn-warning">
+                            <i class="fas fa-key me-2"></i>Gerar Nova Senha
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts específicos da página -->
+    <div layout:fragment="scripts">
+        <script>
+            function confirmarExclusao(id, nome) {
+                document.getElementById('nomeExclusao').textContent = nome;
+                document.getElementById('formExclusao').action = '/usuarios/' + id;
+                
+                // Reset do checkbox
+                const checkbox = document.getElementById('confirmarExclusaoCheck');
+                const btnConfirmar = document.getElementById('btnConfirmarExclusao');
+                checkbox.checked = false;
+                btnConfirmar.disabled = true;
+                
+                new bootstrap.Modal(document.getElementById('modalExclusao')).show();
+            }
+            
+            function resetarSenha() {
+                new bootstrap.Modal(document.getElementById('modalResetSenha')).show();
+            }
+            
+            // Controle do checkbox de confirmação
+            document.getElementById('confirmarExclusaoCheck').addEventListener('change', function() {
+                const btnConfirmar = document.getElementById('btnConfirmarExclusao');
+                btnConfirmar.disabled = !this.checked;
+            });
+            
+            // Calcular estatísticas
+            document.addEventListener('DOMContentLoaded', function() {
+                const rows = document.querySelectorAll('tbody tr');
+                let usuariosAtivos = 0;
+                let admins = 0;
+                let operadores = 0;
+                
+                rows.forEach(row => {
+                    // Verificar se está ativo
+                    const statusBadge = row.querySelector('td:nth-child(4) .badge');
+                    if (statusBadge && statusBadge.textContent.includes('Ativo')) {
+                        usuariosAtivos++;
+                    }
+                    
+                    // Contar perfis
+                    const perfilBadge = row.querySelector('td:nth-child(3) .badge');
+                    if (perfilBadge) {
+                        if (perfilBadge.textContent.includes('Administrador')) {
+                            admins++;
+                        } else if (perfilBadge.textContent.includes('Operador')) {
+                            operadores++;
+                        }
+                    }
+                });
+                
+                document.getElementById('usuarios-ativos').textContent = usuariosAtivos;
+                document.getElementById('admins').textContent = admins;
+                document.getElementById('operadores').textContent = operadores;
+            });
+            
+            // Auto-refresh da página a cada 2 minutos (para status de usuários)
+            setTimeout(function() {
+                if (!document.hidden) {
+                    location.reload();
+                }
+            }, 120000);
+        </script>
+    </div>
+</body>
+</html>

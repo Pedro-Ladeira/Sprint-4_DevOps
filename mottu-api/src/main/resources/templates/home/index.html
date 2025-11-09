@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="pt-br"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${titulo}">Página Inicial</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <h1 th:text="${titulo}">Página Inicial</h1>
+        <p>Se você está vendo esta página, o Thymeleaf com layout está funcionando!</p>
+    </div>
+</body>
+</html>

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout}">
+<head>
+    <title th:text="${modelo.idModelo != null ? 'Editar Modelo' : 'Novo Modelo'} + ' - Mottu'">Modelo - Mottu</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">
+                <i class="fas fa-cogs me-2 text-primary"></i>
+                <span th:text="${modelo.idModelo != null ? 'Editar Modelo' : 'Novo Modelo'}">Novo Modelo</span>
+            </h1>
+            <p class="text-muted mb-0">
+                <span th:if="${modelo.idModelo != null}">Editando dados do modelo <strong th:text="${modelo.fabricante + ' ' + modelo.nomeModelo}">Honda CB600F</strong></span>
+                <span th:unless="${modelo.idModelo != null}">Cadastrar um novo modelo de moto</span>
+            </p>
+        </div>
+        <div>
+            <a th:href="@{/modelos}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Voltar
+            </a>
+        </div>
+    </div>
+
+    <!-- Formulário -->
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-body">
+                    <form th:action="${modelo.idModelo != null ? '/modelos/' + modelo.idModelo : '/modelos'}"
+                          th:method="post"
+                          th:object="${modelo}"
+                          novalidate
+                          data-validate>
+                        <!-- CSRF token (Spring Security) -->
+                        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                        <!-- Hidden field para ID (caso seja edição) -->
+                        <input type="hidden" th:field="*{idModelo}">
+                        <!-- Dados do Modelo -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="card-title border-bottom pb-2">
+                                    <i class="fas fa-info-circle me-2"></i>Informações do Modelo
+                                </h5>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <!-- Fabricante -->
+                            <div class="col-md-6 mb-3">
+                                <label for="fabricante" class="form-label">
+                                    <i class="fas fa-industry me-1"></i>Fabricante *
+                                </label>
+                                <input type="text"
+                                       class="form-control"
+                                       th:field="*{fabricante}"
+                                       id="fabricante"
+                                       placeholder="Honda, Yamaha, BMW, etc."
+                                       maxlength="50"
+                                       required
+                                       list="fabricantes-sugestoes"
+                                       th:classappend="${#fields.hasErrors('fabricante')} ? 'is-invalid'">
+                                <datalist id="fabricantes-sugestoes">
+                                    <option value="Honda">
+                                    <option value="Yamaha">
+                                    <option value="BMW">
+                                    <option value="Kawasaki">
+                                    <option value="Suzuki">
+                                    <option value="Ducati">
+                                    <option value="Triumph">
+                                    <option value="Harley-Davidson">
+                                </datalist>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('fabricante')}" th:errors="*{fabricante}">
+                                    Erro no fabricante
+                                </div>
+                            </div>
+                            <!-- Nome do Modelo -->
+                            <div class="col-md-6 mb-3">
+                                <label for="nomeModelo" class="form-label">
+                                    <i class="fas fa-tag me-1"></i>Nome do Modelo *
+                                </label>
+                                <input type="text"
+                                       class="form-control"
+                                       th:field="*{nomeModelo}"
+                                       id="nomeModelo"
+                                       placeholder="CB600F, MT-07, R1, etc."
+                                       maxlength="50"
+                                       required
+                                       th:classappend="${#fields.hasErrors('nomeModelo')} ? 'is-invalid'">
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('nomeModelo')}" th:errors="*{nomeModelo}">
+                                    Erro no nome do modelo
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <!-- Cilindrada -->
+                            <div class="col-md-4 mb-3">
+                                <label for="cilindrada" class="form-label">
+                                    <i class="fas fa-tachometer-alt me-1"></i>Cilindrada (cc) *
+                                </label>
+                                <input type="number" class="form-control" th:field="*{cilindrada}" id="cilindrada" min="50" max="2000" required th:classappend="${#fields.hasErrors('cilindrada')} ? 'is-invalid'">
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('cilindrada')}" th:errors="*{cilindrada}">Erro na cilindrada</div>
+                            </div>
+                            <!-- Tipo -->
+                            <div class="col-md-4 mb-3">
+                                <label for="tipo" class="form-label">
+                                    <i class="fas fa-list me-1"></i>Tipo *
+                                </label>
+                                <select class="form-select" th:field="*{tipo}" id="tipo" required th:classappend="${#fields.hasErrors('tipo')} ? 'is-invalid'">
+                                    <option value="">Selecione...</option>
+                                    <option value="Naked">Naked</option>
+                                    <option value="Esportiva">Esportiva</option>
+                                    <option value="Scooter">Scooter</option>
+                                    <option value="Adventure">Adventure</option>
+                                    <option value="Touring">Touring</option>
+                                </select>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('tipo')}" th:errors="*{tipo}">Erro no tipo</div>
+                            </div>
+                            <!-- Ano -->
+                            <div class="col-md-4 mb-3">
+                                <label for="ano" class="form-label">
+                                    <i class="fas fa-calendar-alt me-1"></i>Ano *
+                                </label>
+                                <input type="number" class="form-control" th:field="*{ano}" id="ano" min="1980" max="2100" required th:classappend="${#fields.hasErrors('ano')} ? 'is-invalid'">
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('ano')}" th:errors="*{ano}">Erro no ano</div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12 text-end">
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-save me-2"></i>Salvar
+                                </button>
+                                <a th:href="@{/modelos}" class="btn btn-secondary ms-2">
+                                    <i class="fas fa-times me-2"></i>Cancelar
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
