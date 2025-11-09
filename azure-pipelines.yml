@@ -18,12 +18,31 @@ stages:
         steps:
           - checkout: self
 
-          - task: JavaToolInstaller@0
-            displayName: 'Install JDK 17'
+          - script: |
+              echo "Checking Java 17 and Maven on the agent..."
+              if ! command -v java >/dev/null 2>&1; then
+                echo "##[error]Java not found on agent. Install OpenJDK 17 and retry."
+                exit 1
+              fi
+              if ! java -version 2>&1 | grep -E '"17' >/dev/null 2>&1; then
+                echo "##[error]Java 17 is not installed on this agent. Install OpenJDK 17 and retry."
+                java -version 2>&1 || true
+                exit 1
+              fi
+              if ! command -v mvn >/dev/null 2>&1; then
+                echo "##[error]Maven not found on agent. Install Maven and retry."
+                exit 1
+              fi
+              mvn -version
+            displayName: 'Verify Java 17 and Maven are installed'
+            shell: bash
+
+          - task: Cache@2
             inputs:
-              jdkSourceOption: 'PreInstalled'
-              versionSpec: '17'
-              jdkArchitectureOption: 'x64'
+              key: 'maven | "$(Agent.OS)" | mottu-api/pom.xml'
+              path: '~/.m2/repository'
+              restoreKeys: |
+                maven | "$(Agent.OS)"
 
           - task: Maven@3
             displayName: 'Maven - clean package'
@@ -31,13 +50,10 @@ stages:
               mavenPomFile: 'mottu-api/pom.xml'
               goals: 'clean package'
               options: '-DskipTests'
-              javaHomeOption: 'JDKVersion'
-              jdkVersionOption: '1.17'
-            env:
-              DB_URL: 'jdbc:postgresql://pg-flex-sprint4.postgres.database.azure.com:5432/appdb?sslmode=require'
-              DB_USERNAME: '$(DB_USERNAME)'
-              DB_PASSWORD: '$(DB_PASSWORD)'
-              SPRING_PROFILES_ACTIVE: 'postgres'
+              # Using system-installed Java on the self-hosted agent; do not set javaHomeOption
+
+              publishJUnitResults: false
+              mavenOptions: '$(MAVEN_OPTS)'
 
           - task: PublishBuildArtifacts@1
             displayName: 'Publish artifact'
@@ -45,3 +61,49 @@ stages:
               PathtoPublish: 'mottu-api/target'
               ArtifactName: 'mottu-api'
               publishLocation: 'Container'
+  - stage: Test
+    displayName: 'Run Tests'
+    jobs:
+      - job: Test
+        displayName: 'Maven test'
+        steps:
+          - checkout: self
+
+          - script: |
+              echo "Checking Java 17 and Maven on the agent (tests)..."
+              if ! command -v java >/dev/null 2>&1; then
+                echo "##[error]Java not found on agent. Install OpenJDK 17 and retry."
+                exit 1
+              fi
+              if ! java -version 2>&1 | grep -E '"17' >/dev/null 2>&1; then
+                echo "##[error]Java 17 is not installed on this agent. Install OpenJDK 17 and retry."
+                java -version 2>&1 || true
+                exit 1
+              fi
+              if ! command -v mvn >/dev/null 2>&1; then
+                echo "##[error]Maven not found on agent. Install Maven and retry."
+                exit 1
+              fi
+              mvn -version
+            displayName: 'Verify Java 17 and Maven are installed (tests)'
+            shell: bash
+
+          - task: Maven@3
+            displayName: 'Maven - run tests'
+            inputs:
+              mavenPomFile: 'mottu-api/pom.xml'
+              goals: 'test'
+              # Using system-installed Java on the self-hosted agent; do not set javaHomeOption
+            env:
+              DB_HOST: '$(DB_HOST)'
+              DB_PORT: '$(DB_PORT)'
+              DB_NAME: '$(DB_NAME)'
+              DB_USERNAME: '$(DB_USERNAME)'
+              DB_PASSWORD: '$(DB_PASSWORD)'
+              SPRING_PROFILES_ACTIVE: 'postgres'
+
+          - task: PublishTestResults@2
+            inputs:
+              testResultsFormat: 'JUnit'
+              testResultsFiles: '**/surefire-reports/TEST-*.xml'
+            condition: always()
