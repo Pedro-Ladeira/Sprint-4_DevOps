@@ -10,7 +10,6 @@ A Mottu API é uma aplicação web construída com Java + Spring Boot para gest�
 
 ## Desenvolvedores
 - Carlos Eduardo R C Pacheco – RM: 557323
-- João Pedro Amorim Brito Virgens – RM: 559213
 - Pedro Augusto Costa Ladeira – RM: 558514
 
 ## Tecnologias
