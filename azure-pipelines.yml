@@ -5,7 +5,7 @@ pool:
   name: 'Default'
 
 variables:
-  MAVEN_OPTS: '-Xmx1024m'
+  MAVEN_OPTS: '-Xmx512m' # reduced to lower memory pressure on self-hosted VM
 
 stages:
   - stage: Build
@@ -37,21 +37,29 @@ stages:
                 fi
                 mvn -version
 
-          - task: Cache@2
+          - task: Bash@3
+            displayName: 'Ensure Maven cache directory exists'
             inputs:
-              key: 'maven | "$(Agent.OS)" | mottu-api/pom.xml'
-              path: '~/.m2/repository'
+              targetType: 'inline'
+              script: |
+                echo "Creating Maven cache directory under Agent.HomeDirectory"
+                mkdir -p "$(Agent.HomeDirectory)/.m2/repository"
+                sudo chown -R $(whoami) "$(Agent.HomeDirectory)/.m2" || true
+
+          - task: Cache@2
+            displayName: 'Restore Maven cache'
+            inputs:
+              key: 'maven | "$(Agent.OS)" | **/pom.xml'
+              path: '$(Agent.HomeDirectory)/.m2/repository'
               restoreKeys: |
                 maven | "$(Agent.OS)"
 
-          - task: Maven@3
+          - task: Maven@4
             displayName: 'Maven - clean package'
             inputs:
               mavenPomFile: 'mottu-api/pom.xml'
               goals: 'clean package'
               options: '-DskipTests'
-              # Using system-installed Java on the self-hosted agent; do not set javaHomeOption
-
               publishJUnitResults: false
               mavenOptions: '$(MAVEN_OPTS)'
 
@@ -90,7 +98,7 @@ stages:
                 fi
                 mvn -version
 
-          - task: Maven@3
+          - task: Maven@4
             displayName: 'Maven - run tests'
             inputs:
               mavenPomFile: 'mottu-api/pom.xml'
