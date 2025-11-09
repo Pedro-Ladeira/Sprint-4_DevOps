@@ -53,8 +53,8 @@ stages:
               DB_HOST: '$(DB_HOST)'
               DB_PORT: '$(DB_PORT)'
               DB_NAME: '$(DB_NAME)'
-              DB_USERNAME: '$(DB_USERNAME)'
-              DB_PASSWORD: '$(DB_PASSWORD)'
+              DB_USERNAME: '$(DB_USERNAME)'  # ← Adicione no Azure DevOps
+              DB_PASSWORD: '$(DB_PASSWORD)'  # ← Adicione no Azure DevOps (Secret!)
               SPRING_PROFILES_ACTIVE: 'postgres'
 
           - task: PublishBuildArtifacts@1
@@ -87,6 +87,13 @@ stages:
               goals: 'test'
               javaHomeOption: 'JDKVersion'
               jdkVersionOption: '1.17'
+            env:
+              DB_HOST: '$(DB_HOST)'
+              DB_PORT: '$(DB_PORT)'
+              DB_NAME: '$(DB_NAME)'
+              DB_USERNAME: '$(DB_USERNAME)'
+              DB_PASSWORD: '$(DB_PASSWORD)'
+              SPRING_PROFILES_ACTIVE: 'postgres'
 
           - task: PublishTestResults@2
             inputs:
