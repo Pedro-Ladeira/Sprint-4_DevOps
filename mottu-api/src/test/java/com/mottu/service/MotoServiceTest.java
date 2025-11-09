@@ -39,11 +39,12 @@ class MotoServiceTest {
         Moto moto = new Moto();
         moto.setPlaca("ABC123");
 
-        when(motoRepository.save(moto)).thenReturn(moto);
+        // MotoService uses saveAndFlush(...), so stub that method instead of save(...)
+        when(motoRepository.saveAndFlush(moto)).thenReturn(moto);
 
         Moto saved = motoService.salvar(moto);
 
-        verify(motoRepository, times(1)).save(moto);
+        verify(motoRepository, times(1)).saveAndFlush(moto);
         assertEquals("ABC123", saved.getPlaca());
     }
 
@@ -54,7 +55,8 @@ class MotoServiceTest {
         original.setPlaca("OLD");
 
         when(motoRepository.findById(1)).thenReturn(Optional.of(original));
-        when(motoRepository.save(any(Moto.class))).thenAnswer(i -> i.getArgument(0));
+        // MotoService calls saveAndFlush on updates
+        when(motoRepository.saveAndFlush(any(Moto.class))).thenAnswer(i -> i.getArgument(0));
 
         Moto updated = new Moto();
         updated.setIdMoto(1);
@@ -63,7 +65,7 @@ class MotoServiceTest {
         Moto result = motoService.salvar(updated);
 
         verify(motoRepository, times(1)).findById(1);
-        verify(motoRepository, times(1)).save(any(Moto.class));
+        verify(motoRepository, times(1)).saveAndFlush(any(Moto.class));
         assertEquals("NEW", result.getPlaca());
     }
 }

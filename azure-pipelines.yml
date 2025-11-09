@@ -55,14 +55,6 @@ stages:
                 maven | "$(Agent.OS)"
 
           - task: Maven@4
-            displayName: 'Maven - download dependencies (go-offline)'
-            inputs:
-              mavenPomFile: 'mottu-api/pom.xml'
-              goals: 'dependency:go-offline'
-              options: '-DskipTests -B -U -T 1C'
-              mavenOptions: '$(MAVEN_OPTS)'
-
-          - task: Maven@4
             displayName: 'Maven - clean package'
             inputs:
               mavenPomFile: 'mottu-api/pom.xml'
