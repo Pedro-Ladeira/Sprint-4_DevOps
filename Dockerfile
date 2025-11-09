@@ -13,7 +13,7 @@ RUN mvn -B -U dependency:go-offline
 
 # copia o código-fonte e builda (sem testes para imagens de CI; em produção você pode não pular)
 COPY mottu-api/src ./src
-COPY mottu-api/other-needed-files ./ # ajuste conforme necessário
+COPY mottu-api/src/main/resources ./src/main/resources
 RUN mvn -B -DskipTests package
 
 # Stage 2: runtime mais enxuto
