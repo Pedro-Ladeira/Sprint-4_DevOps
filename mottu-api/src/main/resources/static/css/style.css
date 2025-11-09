@@ -16,15 +16,44 @@ body {
     margin: 0;
     padding: 0;
     min-height: 100vh;
+    /* Ensure readable default text color across the app */
+    color: #212529;
 }
 
 .container {
     background: #fff;
-    max-width: 500px;
-    margin: 40px auto;
-    padding: 32px 40px;
-    border-radius: 16px;
-    box-shadow: 0 8px 32px rgba(44, 62, 80, 0.15);
+    /* Use a wider container for content pages (align with base layout) */
+    max-width: 1200px;
+    margin: 24px auto;
+    padding: 24px 28px;
+    border-radius: 10px;
+    box-shadow: 0 8px 32px rgba(44, 62, 80, 0.08);
+}
+
+/* Improve contrast for muted/secondary text (was too light on white) */
+.text-muted {
+    color: #495057 !important;
+}
+
+/* Ensure basic text elements are readable by default */
+p, h1, h2, h3, h4, h5, h6, a, small, label, .form-label {
+    color: #212529;
+}
+
+a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+a:hover {
+    color: #0056b3;
+    text-decoration: underline;
+}
+
+/* Ensure paragraphs inside cards are readable (override of home.css dark theme)
+   Some pages use home.css (dark variables) — we enforce readability on card content */
+.card p, .card .card-body p, .card .small {
+    color: #495057;
 }
 
 /* Layout Principal */
@@ -100,16 +129,65 @@ body {
 .card {
     background: white;
     border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
     margin-bottom: 2rem;
     overflow: hidden;
+    color: #212529;
 }
 
 .card-header {
-    background: #f8f9fa;
-    padding: 1.5rem;
-    border-bottom: 1px solid #dee2e6;
-    font-weight: 600;
+    background: #f1f5fb;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid #e1e8f5;
+    font-weight: 700;
+    color: #212529;
+}
+
+.card-header h5 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+}
+
+/* Page header / Title utilities to ensure consistent alignment across pages */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.page-title {
+    display: flex;
+    flex-direction: column;
+}
+
+.page-title .title-main {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1f3a8a;
+}
+
+.page-title .title-main i {
+    font-size: 1.25rem;
+    color: #007bff;
+}
+
+.page-subtitle {
+    color: #6b7280; /* slightly darker muted */
+    font-size: 0.95rem;
+    margin-top: 0.15rem;
+}
+
+.page-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .card-body {
@@ -226,15 +304,22 @@ body {
     padding: 12px 10px;
     border-bottom: 1px solid #e0e7ef;
     text-align: left;
+    color: #212529;
 }
 
 .table th {
-    background: #f0f4fa;
-    color: #3358e6;
+    background: #f7f9ff;
+    color: #1f3a8a;
 }
 
 .table tr:hover {
     background: #f7faff;
+}
+
+/* Small helper to make field values darker when used with muted labels */
+.field-value {
+    color: #212529;
+    font-weight: 600;
 }
 
 /* Formulários */
@@ -245,8 +330,8 @@ body {
 .form-label {
     display: block;
     margin-bottom: 0.5rem;
-    font-weight: 500;
-    color: #495057;
+    font-weight: 600;
+    color: #333333;
 }
 
 .form-control {

@@ -6,15 +6,15 @@
 <body>
 <div layout:fragment="content">
     <!-- Page Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="h3 mb-1">
-                <i class="fas fa-motorcycle me-2 text-primary"></i>
-                Gerenciamento de Motos
-            </h1>
-            <p class="text-muted mb-0">Lista e controle de todas as motos do sistema</p>
+    <div class="page-header">
+        <div class="page-title">
+            <div class="title-main">
+                <i class="fas fa-motorcycle"></i>
+                <span>Gerenciamento de Motos</span>
+            </div>
+            <div class="page-subtitle">Lista e controle de todas as motos do sistema</div>
         </div>
-        <div>
+        <div class="page-actions">
             <a th:href="@{/motos/novo}" class="btn btn-primary">
                 <i class="fas fa-plus me-2"></i>Nova Moto
             </a>

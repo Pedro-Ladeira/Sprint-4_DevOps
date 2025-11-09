@@ -32,10 +32,19 @@
                     <form th:action="${modelo.idModelo != null ? '/modelos/' + modelo.idModelo : '/modelos'}"
                           th:method="post"
                           th:object="${modelo}"
-                          novalidate
-                          data-validate>
+                          novalidate>
                         <!-- CSRF token (Spring Security) -->
                         <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                        <!-- Server-side general error (displayed prominently) -->
+                        <div th:if="${error}" class="alert alert-danger" role="alert" th:text="${error}"></div>
+                        <!-- Thymeleaf global errors -->
+                        <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger" role="alert">
+                            <ul>
+                                <li th:each="err : ${#fields.globalErrors()}" th:text="${err}"></li>
+                            </ul>
+                        </div>
+
                         <!-- Hidden field para ID (caso seja edição) -->
                         <input type="hidden" th:field="*{idModelo}">
                         <!-- Dados do Modelo -->

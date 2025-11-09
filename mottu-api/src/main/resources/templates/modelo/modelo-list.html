@@ -9,16 +9,15 @@
      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
         <!-- Page Header -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h1 class="h3 mb-1">
-                    <i class="fas fa-cogs me-2 text-primary"></i>
-                    Gerenciamento de Modelos
-                </h1>
-                <p class="text-muted mb-0">Lista e controle de todos os modelos de moto</p>
+        <div class="page-header">
+            <div class="page-title">
+                <div class="title-main">
+                    <i class="fas fa-cogs"></i>
+                    <span>Gerenciamento de Modelos</span>
+                </div>
+                <div class="page-subtitle">Lista e controle de todos os modelos de moto</div>
             </div>
-            <div>
-                <!-- Botão Novo Modelo protegido -->
+            <div class="page-actions">
                 <a th:href="@{/modelos/novo}" class="btn btn-primary" sec:authorize="hasRole('ADMIN')">
                     <i class="fas fa-plus me-2"></i>Novo Modelo
                 </a>

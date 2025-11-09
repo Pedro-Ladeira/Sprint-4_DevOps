@@ -57,7 +57,20 @@ public class ModeloController {
             redirect.addFlashAttribute("success", "Modelo cadastrado com sucesso!");
             return "redirect:/modelos";
         } catch (Exception e) {
-            model.addAttribute("error", "Erro ao salvar modelo: " + e.getMessage());
+            String msg = e.getMessage() != null ? e.getMessage() : "Erro ao salvar modelo";
+            // Map known validation messages to field errors so they appear near the inputs
+            if (msg.toLowerCase().contains("ja existe" ) || msg.toLowerCase().contains("já existe")) {
+                result.rejectValue("nomeModelo", "duplicate", msg);
+            } else if (msg.toLowerCase().contains("cilindrada")) {
+                result.rejectValue("cilindrada", "invalid", msg);
+            } else if (msg.toLowerCase().contains("nome do modelo")) {
+                result.rejectValue("nomeModelo", "invalid", msg);
+            } else if (msg.toLowerCase().contains("fabricante")) {
+                result.rejectValue("fabricante", "invalid", msg);
+            } else {
+                model.addAttribute("error", msg);
+            }
+            model.addAttribute("modelo", modelo);
             return "modelo/modelo-form";
         }
     }
@@ -74,7 +87,19 @@ public class ModeloController {
             redirect.addFlashAttribute("success", "Modelo atualizado com sucesso!");
             return "redirect:/modelos";
         } catch (Exception e) {
-            model.addAttribute("error", "Erro ao atualizar modelo: " + e.getMessage());
+            String msg = e.getMessage() != null ? e.getMessage() : "Erro ao atualizar modelo";
+            if (msg.toLowerCase().contains("ja existe" ) || msg.toLowerCase().contains("já existe")) {
+                result.rejectValue("nomeModelo", "duplicate", msg);
+            } else if (msg.toLowerCase().contains("cilindrada")) {
+                result.rejectValue("cilindrada", "invalid", msg);
+            } else if (msg.toLowerCase().contains("nome do modelo")) {
+                result.rejectValue("nomeModelo", "invalid", msg);
+            } else if (msg.toLowerCase().contains("fabricante")) {
+                result.rejectValue("fabricante", "invalid", msg);
+            } else {
+                model.addAttribute("error", msg);
+            }
+            model.addAttribute("modelo", modelo);
             return "modelo/modelo-form";
         }
     }

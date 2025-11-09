@@ -281,8 +281,10 @@ function handleFormSubmit(e) {
     const submitButton = form.querySelector('button[type="submit"]');
     if (submitButton) {
         submitButton.disabled = true;
+        submitButton.setAttribute('data-original-html', submitButton.innerHTML);
         submitButton.innerHTML = '<span class="spinner"></span> Processando...';
     }
+    // allow submit to proceed
 }
 
 /**
@@ -333,18 +335,29 @@ function validateField(e) {
     } else {
         showFieldError(field, errorMessage);
     }
-    
-    return isValid;
 }
 
 /**
  * Limpa erro do campo
  */
 function clearFieldError(field) {
+    if (!field) return;
     field.classList.remove('error');
-    const errorElement = field.parentNode.querySelector('.field-error');
+    field.classList.remove('is-invalid');
+    // prefer Bootstrap invalid-feedback placement: next sibling or parent .invalid-feedback
+    let errorElement = null;
+    if (field.nextElementSibling && field.nextElementSibling.classList && field.nextElementSibling.classList.contains('invalid-feedback')) {
+        errorElement = field.nextElementSibling;
+    } else {
+        // try find inside parent
+        const parent = field.parentNode;
+        if (parent) {
+            errorElement = parent.querySelector('.invalid-feedback');
+        }
+    }
     if (errorElement) {
-        errorElement.remove();
+        errorElement.textContent = '';
+        errorElement.style.display = 'none';
     }
 }
 
@@ -352,16 +365,28 @@ function clearFieldError(field) {
  * Mostra erro no campo
  */
 function showFieldError(field, message) {
+    if (!field) return;
     field.classList.add('error');
-    
-    let errorElement = field.parentNode.querySelector('.field-error');
-    if (!errorElement) {
-        errorElement = document.createElement('div');
-        errorElement.className = 'field-error';
-        field.parentNode.appendChild(errorElement);
+    field.classList.add('is-invalid');
+    // find or create invalid-feedback element
+    let errorElement = null;
+    if (field.nextElementSibling && field.nextElementSibling.classList && field.nextElementSibling.classList.contains('invalid-feedback')) {
+        errorElement = field.nextElementSibling;
+    } else {
+        const parent = field.parentNode;
+        if (parent) {
+            errorElement = parent.querySelector('.invalid-feedback');
+            if (!errorElement) {
+                errorElement = document.createElement('div');
+                errorElement.className = 'invalid-feedback';
+                parent.appendChild(errorElement);
+            }
+        }
     }
-    
-    errorElement.textContent = message;
+    if (errorElement) {
+        errorElement.textContent = message;
+        errorElement.style.display = 'block';
+    }
 }
 
 /**
