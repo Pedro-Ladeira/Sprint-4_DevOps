@@ -32,35 +32,25 @@ stages:
               goals: 'clean package'
               options: '-DskipTests'
               javaHomeOption: 'JDKVersion'
-              jdkVersionOption: '17'
+              jdkVersionOption: '1.17'
             env:
               DB_URL: 'jdbc:postgresql://pg-flex-sprint4.postgres.database.azure.com:5432/appdb?sslmode=require'
               DB_USERNAME: '$(DB_USERNAME)'
               DB_PASSWORD: '$(DB_PASSWORD)'
               SPRING_PROFILES_ACTIVE: 'postgres'
 
-          - task: PowerShell@2
-            displayName: 'Find JAR and set variable'
-            inputs:
-              targetType: 'inline'
-              script: |
-                $jar = Get-ChildItem -Path '$(Build.SourcesDirectory)\mottu-api\target' -Filter '*.jar' -File -ErrorAction SilentlyContinue | Select-Object -First 1
-                if (-not $jar) { Write-Error "JAR not found in `mottu-api/target`"; exit 1 }
-                Write-Host "Found jar: $($jar.FullName)"
-                Write-Host "##vso[task.setvariable variable=JAR_NAME]$($jar.Name)"
-
           - task: CopyFiles@2
-            displayName: 'Copy JAR to staging'
+            displayName: 'Copy JAR to artifact staging'
             inputs:
               sourceFolder: '$(Build.SourcesDirectory)/mottu-api/target'
               contents: '*.jar'
               targetFolder: '$(Build.ArtifactStagingDirectory)'
 
           - task: PublishBuildArtifacts@1
-            displayName: 'Publish artifact'
+            displayName: 'Publish JAR artifact'
             inputs:
               pathToPublish: '$(Build.ArtifactStagingDirectory)'
-              artifactName: 'mottu-api'
+              artifactName: 'mottu-api-jar'
               publishLocation: 'Container'
 
   - stage: Deploy
@@ -69,28 +59,23 @@ stages:
     condition: succeeded()
     jobs:
       - job: DeployJob
-        displayName: 'Deploy JAR'
+        displayName: 'Deploy JAR to App Service'
         steps:
           - checkout: none
 
           - task: DownloadBuildArtifacts@0
+            displayName: 'Download JAR artifact'
             inputs:
               buildType: 'current'
               downloadType: 'single'
-              artifactName: 'mottu-api'
+              artifactName: 'mottu-api-jar'
               downloadPath: '$(System.ArtifactsDirectory)'
 
           - task: AzureWebApp@1
-            displayName: 'Deploy to App Service'
+            displayName: 'Deploy to Azure App Service'
             inputs:
-              azureSubscription: 'Azure Subscription' # substitua pelo seu service connection
+              azureSubscription: 'Azure Subscription'
               appName: 'mottu-api-1762730933'
-              package: '$(System.ArtifactsDirectory)/mottu-api/$(JAR_NAME)'
+              package: '$(System.ArtifactsDirectory)/mottu-api-jar'
               appType: 'webAppLinux'
               runtimeStack: 'JAVA|17-java17'
-              startupCommand: 'java -jar /home/site/wwwroot/$(JAR_NAME)'
-              appSettings: |
-                -SPRING_PROFILES_ACTIVE=postgres
-                -DB_URL=jdbc:postgresql://pg-flex-sprint4.postgres.database.azure.com:5432/appdb?sslmode=require
-                -DB_USERNAME=$(DB_USERNAME)
-                -DB_PASSWORD=$(DB_PASSWORD)
