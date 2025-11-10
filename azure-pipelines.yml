@@ -2,23 +2,12 @@ trigger:
   - main
 
 pool:
-  name: '$(AGENT_POOL)'
+  name: 'Default'
+  demands:
+    - Agent.Version -gtVersion 2.200.0
 
 variables:
-  AGENT_POOL: 'Default'            # change if your agent pool has another name (e.g. SelfHosted)
-  MAVEN_OPTS: '-Xmx512m'           # reduced to lower memory pressure on self-hosted VM
-  BUILD_DOCKER: 'false'            # set to 'true' to enable Docker stage
-  IMAGE_NAME: 'mottu-api'          # e.g. myregistry.azurecr.io/mottu-api or dockerhubuser/mottu-api
-  ACR_SERVICE_CONNECTION: ''       # set service connection name if you use Docker@2 with ACR
-  DOCKER_REGISTRY_SERVICE_CONNECTION: '' # alternative service connection for generic Docker registries
-  # Deployment-related variables (fill these in pipeline variables or at run time)
-  BUILD_AND_PUSH_TAG: '$(Build.BuildId)'
-  DEPLOY_TARGET: 'WebApp'          # 'WebApp' or 'ACI' or '' to skip deploy
-  AZURE_SERVICE_CONNECTION: ''     # name of Azure RM service connection for deployments
-  ACR_LOGIN_SERVER: ''             # e.g. myregistry.azurecr.io (required if deploying from ACR)
-  WEBAPP_NAME: ''                  # name of Azure Web App for Containers (if DEPLOY_TARGET=WebApp)
-  ACI_RESOURCE_GROUP: ''           # resource group for ACI (if DEPLOY_TARGET=ACI)
-  ACI_CONTAINER_GROUP: ''          # container group name for ACI (if DEPLOY_TARGET=ACI)
+  MAVEN_OPTS: '-Xmx512m -XX:+UseG1GC'
 
 stages:
   - stage: Build
@@ -29,43 +18,12 @@ stages:
         steps:
           - checkout: self
 
-          - task: Bash@3
-            displayName: 'Verify Java 17 and Maven are installed'
+          - task: JavaToolInstaller@0
+            displayName: 'Install JDK 17'
             inputs:
-              targetType: 'inline'
-              script: |
-                echo "Checking Java 17 and Maven on the agent..."
-                if ! command -v java >/dev/null 2>&1; then
-                  echo "##[error]Java not found on agent. Install OpenJDK 17 and retry."
-                  exit 1
-                fi
-                if ! java -version 2>&1 | grep -E '"17' >/dev/null 2>&1; then
-                  echo "##[error]Java 17 is not installed on this agent. Install OpenJDK 17 and retry."
-                  java -version 2>&1 || true
-                  exit 1
-                fi
-                if ! command -v mvn >/dev/null 2>&1; then
-                  echo "##[error]Maven not found on agent. Install Maven and retry."
-                  exit 1
-                fi
-                mvn -version
-
-          - task: Bash@3
-            displayName: 'Ensure Maven cache directory exists'
-            inputs:
-              targetType: 'inline'
-              script: |
-                echo "Creating Maven cache directory under Agent.HomeDirectory"
-                mkdir -p "$(Agent.HomeDirectory)/.m2/repository"
-                sudo chown -R $(whoami) "$(Agent.HomeDirectory)/.m2" || true
-
-          - task: Cache@2
-            displayName: 'Restore Maven cache'
-            inputs:
-              key: 'maven | "$(Agent.OS)" | **/pom.xml'
-              path: '$(Agent.HomeDirectory)/.m2/repository'
-              restoreKeys: |
-                maven | "$(Agent.OS)"
+              jdkSourceOption: 'PreInstalled'
+              versionSpec: '17'
+              jdkArchitectureOption: 'x64'
 
           - task: Maven@4
             displayName: 'Maven - clean package'
@@ -73,156 +31,66 @@ stages:
               mavenPomFile: 'mottu-api/pom.xml'
               goals: 'clean package'
               options: '-DskipTests'
-              publishJUnitResults: false
-              mavenOptions: '$(MAVEN_OPTS)'
-
-          - task: PublishBuildArtifacts@1
-            displayName: 'Publish artifact'
-            inputs:
-              PathtoPublish: 'mottu-api/target'
-              ArtifactName: 'mottu-api'
-              publishLocation: 'Container'
-  - stage: Test
-    displayName: 'Run Tests'
-    jobs:
-      - job: Test
-        displayName: 'Maven test'
-        steps:
-          - checkout: self
-
-          - task: Bash@3
-            displayName: 'Verify Java 17 and Maven are installed (tests)'
-            inputs:
-              targetType: 'inline'
-              script: |
-                echo "Checking Java 17 and Maven on the agent (tests)..."
-                if ! command -v java >/dev/null 2>&1; then
-                  echo "##[error]Java not found on agent. Install OpenJDK 17 and retry."
-                  exit 1
-                fi
-                if ! java -version 2>&1 | grep -E '"17' >/dev/null 2>&1; then
-                  echo "##[error]Java 17 is not installed on this agent. Install OpenJDK 17 and retry."
-                  java -version 2>&1 || true
-                  exit 1
-                fi
-                if ! command -v mvn >/dev/null 2>&1; then
-                  echo "##[error]Maven not found on agent. Install Maven and retry."
-                  exit 1
-                fi
-                mvn -version
-
-          - task: Maven@4
-            displayName: 'Maven - run tests'
-            inputs:
-              mavenPomFile: 'mottu-api/pom.xml'
-              goals: 'test'
-              # Using system-installed Java on the self-hosted agent; do not set javaHomeOption
+              javaHomeOption: 'JDKVersion'
+              jdkVersionOption: '17'
             env:
-              DB_HOST: '$(DB_HOST)'
-              DB_PORT: '$(DB_PORT)'
-              DB_NAME: '$(DB_NAME)'
+              DB_URL: 'jdbc:postgresql://pg-flex-sprint4.postgres.database.azure.com:5432/appdb?sslmode=require'
               DB_USERNAME: '$(DB_USERNAME)'
               DB_PASSWORD: '$(DB_PASSWORD)'
               SPRING_PROFILES_ACTIVE: 'postgres'
 
-          - task: PublishTestResults@2
+          - task: PowerShell@2
+            displayName: 'Find JAR and set variable'
             inputs:
-              testResultsFormat: 'JUnit'
-              testResultsFiles: '**/surefire-reports/TEST-*.xml'
-            condition: always()
+              targetType: 'inline'
+              script: |
+                $jar = Get-ChildItem -Path '$(Build.SourcesDirectory)\mottu-api\target' -Filter '*.jar' -File -ErrorAction SilentlyContinue | Select-Object -First 1
+                if (-not $jar) { Write-Error "JAR not found in `mottu-api/target`"; exit 1 }
+                Write-Host "Found jar: $($jar.FullName)"
+                Write-Host "##vso[task.setvariable variable=JAR_NAME]$($jar.Name)"
 
-  - stage: Docker
-    displayName: 'Build & Push Docker Image'
-    dependsOn: Build
-    condition: and(succeeded(), eq(variables['BUILD_DOCKER'], 'true'))
-    jobs:
-      - job: DockerBuild
-        displayName: 'Build and push image'
-        pool:
-          name: '$(AGENT_POOL)'
-        steps:
-          - download: current
-            artifact: mottu-api
+          - task: CopyFiles@2
+            displayName: 'Copy JAR to staging'
+            inputs:
+              sourceFolder: '$(Build.SourcesDirectory)/mottu-api/target'
+              contents: '*.jar'
+              targetFolder: '$(Build.ArtifactStagingDirectory)'
 
-          - script: |
-              echo "Preparing Docker build context"
-              mkdir -p docker-build-context
-              cp mottu-api/target/*.jar docker-build-context/app.jar || true
-              cp Dockerfile docker-build-context/ || true
-            displayName: 'Prepare Docker context'
-
-          # If using Azure Container Registry or Docker Hub via service connection, prefer Docker@2
-          - ${{ if ne(variables.ACR_SERVICE_CONNECTION, '') }}:
-            - task: Docker@2
-              displayName: 'Build and push to ACR via Docker@2'
-              inputs:
-                containerRegistry: '$(ACR_SERVICE_CONNECTION)'
-                repository: '$(IMAGE_NAME)'
-                command: 'buildAndPush'
-                Dockerfile: 'docker-build-context/Dockerfile'
-                tags: |
-                  $(Build.BuildId)
-
-          - ${{ if and(eq(variables.ACR_SERVICE_CONNECTION, ''), ne(variables.DOCKER_REGISTRY_SERVICE_CONNECTION, '')) }}:
-            - task: Docker@2
-              displayName: 'Build and push to Docker Registry via Docker@2'
-              inputs:
-                containerRegistry: '$(DOCKER_REGISTRY_SERVICE_CONNECTION)'
-                repository: '$(IMAGE_NAME)'
-                command: 'buildAndPush'
-                Dockerfile: 'docker-build-context/Dockerfile'
-                tags: |
-                  $(Build.BuildId)
-
-          - ${{ if and(eq(variables.ACR_SERVICE_CONNECTION, ''), eq(variables.DOCKER_REGISTRY_SERVICE_CONNECTION, '')) }}:
-            - script: |
-                echo "No service connection configured for Docker. Trying docker CLI (agent must have Docker installed)."
-                docker --version || exit 1
-                docker build -t $(IMAGE_NAME):$(Build.BuildId) -f docker-build-context/Dockerfile docker-build-context
-                # login will need variables DOCKERHUB_USERNAME/DOCKERHUB_PASSWORD if pushing to Docker Hub
-                if [ -n "$(DOCKERHUB_PASSWORD)" ]; then
-                  echo "$(DOCKERHUB_PASSWORD)" | docker login --username "$(DOCKERHUB_USERNAME)" --password-stdin
-                fi
-                docker push $(IMAGE_NAME):$(Build.BuildId)
-              displayName: 'Build & push via docker CLI'
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish artifact'
+            inputs:
+              pathToPublish: '$(Build.ArtifactStagingDirectory)'
+              artifactName: 'mottu-api'
+              publishLocation: 'Container'
 
   - stage: Deploy
-    displayName: 'Deploy to Azure'
-    dependsOn: Docker
-    condition: and(succeeded(), eq(variables['BUILD_DOCKER'], 'true'))
+    displayName: 'Deploy to Azure Web App'
+    dependsOn: Build
+    condition: succeeded()
     jobs:
-      - job: Deploy
-        displayName: 'Deploy image to selected Azure target'
-        pool:
-          name: '$(AGENT_POOL)'
+      - job: DeployJob
+        displayName: 'Deploy JAR'
         steps:
-          - script: echo "Preparing deployment for $(DEPLOY_TARGET) using image $(IMAGE_NAME):$(BUILD_AND_PUSH_TAG)"
-            displayName: 'Deployment info'
+          - checkout: none
 
-          # Deploy to Azure Web App for Containers
-          - ${{ if eq(variables.DEPLOY_TARGET, 'WebApp') }}:
-            - task: AzureWebAppContainer@1
-              displayName: 'Deploy image to Azure Web App for Containers'
-              inputs:
-                azureSubscription: '$(AZURE_SERVICE_CONNECTION)'
-                appName: '$(WEBAPP_NAME)'
-                containers: |
-                  $(ACR_LOGIN_SERVER)/$(IMAGE_NAME):$(BUILD_AND_PUSH_TAG)
+          - task: DownloadBuildArtifacts@0
+            inputs:
+              buildType: 'current'
+              downloadType: 'single'
+              artifactName: 'mottu-api'
+              downloadPath: '$(System.ArtifactsDirectory)'
 
-          # Deploy to Azure Container Instances
-          - ${{ if eq(variables.DEPLOY_TARGET, 'ACI') }}:
-            - task: AzureCLI@2
-              displayName: 'Deploy image to Azure Container Instances (ACI)'
-              inputs:
-                azureSubscription: '$(AZURE_SERVICE_CONNECTION)'
-                scriptType: 'bash'
-                scriptLocation: 'inlineScript'
-                inlineScript: |
-                  set -e
-                  echo "Logging in to ACR (if ACR provided)"
-                  if [ -n "$(ACR_LOGIN_SERVER)" ]; then
-                    az acr login --name $(ACR_LOGIN_SERVER) || true
-                  fi
-                  echo "Creating/updating ACI group $(ACI_CONTAINER_GROUP) in $(ACI_RESOURCE_GROUP)"
-                  az container create --resource-group $(ACI_RESOURCE_GROUP) --name $(ACI_CONTAINER_GROUP) \
-                    --image $(IMAGE_NAME):$(BUILD_AND_PUSH_TAG) --cpu 1 --memory 1.5 --restart-policy OnFailure --dns-name-label $(ACI_CONTAINER_GROUP)
+          - task: AzureWebApp@1
+            displayName: 'Deploy to App Service'
+            inputs:
+              azureSubscription: 'Azure Subscription' # substitua pelo seu service connection
+              appName: 'mottu-api-1762730933'
+              package: '$(System.ArtifactsDirectory)/mottu-api/$(JAR_NAME)'
+              appType: 'webAppLinux'
+              runtimeStack: 'JAVA|17-java17'
+              startupCommand: 'java -jar /home/site/wwwroot/$(JAR_NAME)'
+              appSettings: |
+                -SPRING_PROFILES_ACTIVE=postgres
+                -DB_URL=jdbc:postgresql://pg-flex-sprint4.postgres.database.azure.com:5432/appdb?sslmode=require
+                -DB_USERNAME=$(DB_USERNAME)
+                -DB_PASSWORD=$(DB_PASSWORD)
