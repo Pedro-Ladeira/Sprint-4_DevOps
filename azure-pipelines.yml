@@ -125,7 +125,7 @@ stages:
               # Start the specific jar
               startupCommand: 'java -Dserver.port=$PORT -jar /home/site/wwwroot/$(DEPLOY_JAR_NAME)'
               appSettings: |
-                -SPRING_PROFILES_ACTIVE=postgres
-                -DB_URL=jdbc:postgresql://pg-flex-sprint4.postgres.database.azure.com:5432/appdb?sslmode=require
-                -DB_USERNAME=$(DB_USERNAME)
-                -DB_PASSWORD=$(DB_PASSWORD)
+                SPRING_PROFILES_ACTIVE=postgres
+                DB_URL=jdbc:postgresql://pg-flex-sprint4.postgres.database.azure.com:5432/appdb?sslmode=require
+                DB_USERNAME=$(DB_USERNAME)
+                DB_PASSWORD=$(DB_PASSWORD)
