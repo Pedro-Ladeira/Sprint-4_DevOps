@@ -9,7 +9,7 @@ A Mottu API é uma aplicação web construída com Java + Spring Boot para gest�
 - Docker + docker-compose: `docker-compose.yml`
 
 ## Desenvolvedores
-- Carlos Eduardo R C Pacheco – RM: 557323       
+- Carlos Eduardo R C Pacheco – RM: 557323        
 - Pedro Augusto Costa Ladeira – RM: 558514
 
 ## Tecnologias
