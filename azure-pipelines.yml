@@ -1,81 +1,37 @@
-trigger:
-  - main
 
-pool:
-  name: 'Default'
-  demands:
-    - Agent.Version -gtVersion 2.200.0
+  variables:
+    MAVEN_OPTS: '-Xmx512m -XX:+UseG1GC'
+    AZURE_SERVICE_CONNECTION: 'Pedro-Ladeira'  # substitua pelo nome real
 
-variables:
-  MAVEN_OPTS: '-Xmx512m -XX:+UseG1GC'
+  stages:
+    - stage: Deploy
+      displayName: 'Deploy to Azure Web App'
+      dependsOn: Build
+      condition: succeeded()
+      jobs:
+        - job: DeployJob
+          displayName: 'Deploy JAR'
+          steps:
+            - checkout: none
 
-stages:
-  - stage: Build
-    displayName: 'Build and Package'
-    jobs:
-      - job: Build
-        displayName: 'Maven build'
-        steps:
-          - checkout: self
+            - task: DownloadBuildArtifacts@0
+              inputs:
+                buildType: 'current'
+                downloadType: 'single'
+                artifactName: 'mottu-api'
+                downloadPath: '$(System.ArtifactsDirectory)'
 
-          - task: JavaToolInstaller@0
-            displayName: 'Install JDK 17'
-            inputs:
-              jdkSourceOption: 'PreInstalled'
-              versionSpec: '17'
-              jdkArchitectureOption: 'x64'
-
-          - task: Maven@4
-            displayName: 'Maven - clean package'
-            inputs:
-              mavenPomFile: 'mottu-api/pom.xml'
-              goals: 'clean package'
-              options: '-DskipTests'
-              javaHomeOption: 'JDKVersion'
-              jdkVersionOption: '1.17'
-            env:
-              DB_URL: 'jdbc:postgresql://pg-flex-sprint4.postgres.database.azure.com:5432/appdb?sslmode=require'
-              DB_USERNAME: '$(DB_USERNAME)'
-              DB_PASSWORD: '$(DB_PASSWORD)'
-              SPRING_PROFILES_ACTIVE: 'postgres'
-
-          - task: CopyFiles@2
-            displayName: 'Copy JAR to artifact staging'
-            inputs:
-              sourceFolder: '$(Build.SourcesDirectory)/mottu-api/target'
-              contents: '*.jar'
-              targetFolder: '$(Build.ArtifactStagingDirectory)'
-
-          - task: PublishBuildArtifacts@1
-            displayName: 'Publish JAR artifact'
-            inputs:
-              pathToPublish: '$(Build.ArtifactStagingDirectory)'
-              artifactName: 'mottu-api-jar'
-              publishLocation: 'Container'
-
-  - stage: Deploy
-    displayName: 'Deploy to Azure Web App'
-    dependsOn: Build
-    condition: succeeded()
-    jobs:
-      - job: DeployJob
-        displayName: 'Deploy JAR to App Service'
-        steps:
-          - checkout: none
-
-          - task: DownloadBuildArtifacts@0
-            displayName: 'Download JAR artifact'
-            inputs:
-              buildType: 'current'
-              downloadType: 'single'
-              artifactName: 'mottu-api-jar'
-              downloadPath: '$(System.ArtifactsDirectory)'
-
-          - task: AzureWebApp@1
-            displayName: 'Deploy to Azure App Service'
-            inputs:
-              azureSubscription: 'Azure Subscription'
-              appName: 'mottu-api-1762730933'
-              package: '$(System.ArtifactsDirectory)/mottu-api-jar'
-              appType: 'webAppLinux'
-              runtimeStack: 'JAVA|17-java17'
+            - task: AzureWebApp@1
+              displayName: 'Deploy to App Service'
+              inputs:
+                azureSubscription: '$(AZURE_SERVICE_CONNECTION)'
+                appName: 'mottu-api-1762730933'
+                package: '$(System.ArtifactsDirectory)/mottu-api/$(JAR_NAME)'
+                appType: 'webAppLinux'
+                runtimeStack: 'JAVA|17-java17'
+                startupCommand: 'java -jar /home/site/wwwroot/$(JAR_NAME)'
+                appSettings: |
+                  -SPRING_PROFILES_ACTIVE=postgres
+                  -DB_URL=jdbc:postgresql://pg-flex-sprint4.postgres.database.azure.com:5432/appdb?sslmode=require
+                  -DB_USERNAME=$(DB_USERNAME)
+                  -DB_PASSWORD=$(DB_PASSWORD)
