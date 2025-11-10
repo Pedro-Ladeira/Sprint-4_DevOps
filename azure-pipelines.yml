@@ -7,10 +7,6 @@ pool:
   demands:
     - Agent.Version -gtVersion 2.200.0
 
-variables:
-  MAVEN_OPTS: '-Xmx512m -XX:+UseG1GC'
-  AZURE_SERVICE_CONNECTION: 'Pedro-Ladeira'  # nome da AzureRM service connection
-
 stages:
   - stage: Build
     displayName: 'Build and Package'
