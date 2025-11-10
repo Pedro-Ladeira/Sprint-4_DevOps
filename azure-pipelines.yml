@@ -19,28 +19,47 @@ stages:
         displayName: 'Maven build'
         steps:
           - checkout: self
-          - task: JavaToolInstaller@0
-            displayName: 'Install JDK 17'
+          - task: Bash@3
+            displayName: 'Verify Java 17 is installed'
             inputs:
-              jdkSourceOption: 'PreInstalled'
-              versionSpec: '17'
-              jdkArchitectureOption: 'x64'
+              targetType: 'inline'
+              script: |
+                echo "Checking Java 17 on the agent..."
+                if ! command -v java >/dev/null 2>&1; then
+                  echo "##[error]Java not found on agent. Install OpenJDK 17 and retry."
+                  exit 1
+                fi
+                if ! java -version 2>&1 | grep -E '"17' >/dev/null 2>&1; then
+                  echo "##[error]Java 17 is not installed on this agent. Install OpenJDK 17 and retry."
+                  java -version 2>&1 || true
+                  exit 1
+                fi
+                echo "Java 17 is installed:";
+                java -version
+                if command -v mvn >/dev/null 2>&1; then
+                  mvn -version || true
+                fi
           - task: Maven@4
             displayName: 'Maven - clean package'
             inputs:
               mavenPomFile: 'mottu-api/pom.xml'
               goals: 'clean package'
               options: '-DskipTests'
-              javaHomeOption: 'JDKVersion'
-              jdkVersionOption: '17'
-          - task: PowerShell@2
+              # Use system-installed Java on the self-hosted agent; do not request JDKVersion from the task
+          - task: Bash@3
             displayName: 'Find JAR and set variable'
             inputs:
               targetType: 'inline'
               script: |
-                $jar = Get-ChildItem -Path '$(Build.SourcesDirectory)\mottu-api\target' -Filter '*.jar' -File -ErrorAction SilentlyContinue | Select-Object -First 1
-                if (-not $jar) { Write-Error "JAR not found"; exit 1 }
-                Write-Host "##vso[task.setvariable variable=JAR_NAME]$($jar.Name)"
+                echo "Locating JAR in $(Build.SourcesDirectory)/mottu-api/target"
+                jar=$(ls "$(Build.SourcesDirectory)/mottu-api/target"/*.jar 2>/dev/null | head -n1 || true)
+                if [ -z "$jar" ]; then
+                  echo "##[error]JAR not found in $(Build.SourcesDirectory)/mottu-api/target"
+                  exit 1
+                fi
+                name=$(basename "$jar")
+                echo "Found JAR: $name"
+                echo "##vso[task.setvariable variable=JAR_NAME]$name"
           - task: CopyFiles@2
             displayName: 'Copy JAR to staging'
             inputs:
