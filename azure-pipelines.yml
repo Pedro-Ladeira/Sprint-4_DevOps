@@ -9,7 +9,7 @@ pool:
 
 variables:
   MAVEN_OPTS: '-Xmx512m -XX:+UseG1GC'
-  AZURE_SERVICE_CONNECTION: 'azure-subscription-RM'  # nome da AzureRM service connection
+  AZURE_SERVICE_CONNECTION: 'Pedro-Ladeira'  # nome da AzureRM service connection
 
 stages:
   - stage: Build
