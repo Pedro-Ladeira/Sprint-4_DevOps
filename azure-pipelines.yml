@@ -7,122 +7,41 @@ pool:
   demands:
     - Agent.Version -gtVersion 2.200.0
 
-variables:
-  MAVEN_OPTS: '-Xmx512m -XX:+UseG1GC'
-  AZURE_SERVICE_CONNECTION: 'azure-subscription-RM'  # nome da AzureRM service connection
-
 stages:
-  - stage: Build
-    displayName: 'Build and Package'
+  - stage: BuildAndDeploy
+    displayName: 'Build and Deploy'
     jobs:
-      - job: BuildJob
-        displayName: 'Maven build'
+      - job: BuildAndDeployJob
+        displayName: 'Build (Maven) and Deploy'
         steps:
           - checkout: self
-          - task: Bash@3
-            displayName: 'Verify Java 17 is installed'
-            inputs:
-              targetType: 'inline'
-              script: |
-                echo "Checking Java 17 on the agent..."
-                if ! command -v java >/dev/null 2>&1; then
-                  echo "##[error]Java not found on agent. Install OpenJDK 17 and retry."
-                  exit 1
-                fi
-                if ! java -version 2>&1 | grep -E '"17' >/dev/null 2>&1; then
-                  echo "##[error]Java 17 is not installed on this agent. Install OpenJDK 17 and retry."
-                  java -version 2>&1 || true
-                  exit 1
-                fi
-                echo "Java 17 is installed:";
-                java -version
-                if command -v mvn >/dev/null 2>&1; then
-                  mvn -version || true
-                fi
+
           - task: Maven@4
             displayName: 'Maven - clean package'
             inputs:
               mavenPomFile: 'mottu-api/pom.xml'
               goals: 'clean package'
               options: '-DskipTests'
-              # Use system-installed Java on the self-hosted agent; do not request JDKVersion from the task
-          - task: Bash@3
-            displayName: 'Find JAR and set variable'
-            inputs:
-              targetType: 'inline'
-              script: |
-                echo "Locating JAR in $(Build.SourcesDirectory)/mottu-api/target"
-                jar=$(ls "$(Build.SourcesDirectory)/mottu-api/target"/*.jar 2>/dev/null | head -n1 || true)
-                if [ -z "$jar" ]; then
-                  echo "##[error]JAR not found in $(Build.SourcesDirectory)/mottu-api/target"
-                  exit 1
-                fi
-                name=$(basename "$jar")
-                echo "Found JAR: $name"
-                echo "##vso[task.setvariable variable=JAR_NAME]$name"
-          - task: CopyFiles@2
-            displayName: 'Copy JAR to staging'
-            inputs:
-              sourceFolder: '$(Build.SourcesDirectory)/mottu-api/target'
-              contents: '*.jar'
-              targetFolder: '$(Build.ArtifactStagingDirectory)'
-          - task: PublishBuildArtifacts@1
-            displayName: 'Publish artifact'
-            inputs:
-              pathToPublish: '$(Build.ArtifactStagingDirectory)'
-              artifactName: 'mottu-api'
-              publishLocation: 'Container'
 
-  - stage: Deploy
-    displayName: 'Deploy to Azure Web App'
-    dependsOn: Build
-    condition: succeeded()
-    jobs:
-      - job: DeployJob
-        displayName: 'Deploy JAR'
-        steps:
-          - checkout: none
-          - task: DownloadBuildArtifacts@0
-            inputs:
-              buildType: 'current'
-              downloadType: 'single'
-              artifactName: 'mottu-api'
-              downloadPath: '$(System.ArtifactsDirectory)'
-          - task: Bash@3
-            displayName: 'Debug: list downloaded artifact files'
-            inputs:
-              targetType: 'inline'
-              script: |
-                echo "Listing contents of $(System.ArtifactsDirectory)/mottu-api"
-                ls -la "$(System.ArtifactsDirectory)/mottu-api" || true
-                echo "First matching jar:" 
-                ls "$(System.ArtifactsDirectory)/mottu-api"/*.jar 2>/dev/null | head -n1 || echo "No jar found"
-          - task: Bash@3
-            displayName: 'Select deploy JAR and set DEPLOY_JAR'
-            inputs:
-              targetType: 'inline'
-              script: |
-                echo "Selecting JAR to deploy from $(System.ArtifactsDirectory)/mottu-api"
-                jar=$(ls "$(System.ArtifactsDirectory)/mottu-api"/*.jar 2>/dev/null | head -n1 || true)
-                if [ -z "$jar" ]; then
-                  echo "##[error]No jar found in $(System.ArtifactsDirectory)/mottu-api"
-                  exit 1
-                fi
-                echo "Found deploy jar: $jar"
-                name=$(basename "$jar")
-                # set a pipeline variable for the package path
-                echo "##vso[task.setvariable variable=DEPLOY_JAR]$jar"
-                echo "##vso[task.setvariable variable=DEPLOY_JAR_NAME]$name"
+          - bash: |
+              echo "Locating JAR to deploy..."
+              jar=$(ls "$(Build.SourcesDirectory)/mottu-api/target"/*.jar 2>/dev/null | head -n1 || true)
+              if [ -z "$jar" ]; then
+                echo "##[error]JAR not found in $(Build.SourcesDirectory)/mottu-api/target"
+                exit 1
+              fi
+              echo "Found JAR: $jar"
+              echo "##vso[task.setvariable variable=DEPLOY_JAR]$jar"
+            displayName: 'Find and set DEPLOY_JAR'
+
           - task: AzureWebApp@1
             displayName: 'Deploy to App Service'
             inputs:
-              azureSubscription: '$(AZURE_SERVICE_CONNECTION)'
+              azureSubscription: 'azure-subscription-RM'
               appName: 'mottu-api-1762730933'
-              # Use the exact jar path selected in the previous step
               package: '$(DEPLOY_JAR)'
               appType: 'webAppLinux'
               runtimeStack: 'JAVA|17-java17'
-              # Start the specific jar
-              startupCommand: 'java -Dserver.port=$PORT -jar /home/site/wwwroot/$(DEPLOY_JAR_NAME)'
-              # Keep only DB credentials as pipeline-provided app settings
-              appSettings: '["DB_USERNAME=$(DB_USERNAME)","DB_PASSWORD=$(DB_PASSWORD)"]'
+              # no appSettings to avoid modifying application settings
+              # optional startup command if your app needs it (uncomment to use)
+              # startupCommand: 'java -Dserver.port=$PORT -jar /home/site/wwwroot/$(notdir $(DEPLOY_JAR)))'
