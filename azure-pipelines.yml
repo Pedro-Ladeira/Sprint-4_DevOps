@@ -133,20 +133,56 @@ stages:
           name: 'Default'  # use existing self-hosted agent pool instead of hosted 'ubuntu-latest'
         steps:
           - bash: |
+              set -euo pipefail
               if [ -z "${AZURE_RESOURCE_GROUP}" ]; then
                 echo "##[warning]AZURE_RESOURCE_GROUP is not set. Skipping Azure CLI app settings step."
                 exit 0
               fi
+
+              echo "Ensure Azure CLI is available..."
+              if ! command -v az >/dev/null 2>&1; then
+                echo "Azure CLI not found. Installing..."
+                if [ -x "$(command -v apt-get 2>/dev/null || true)" ]; then
+                  # Debian/Ubuntu install
+                  curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+                elif [ -x "$(command -v yum 2>/dev/null || true)" ]; then
+                  # RHEL/CentOS
+                  sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc
+                  sudo sh -c 'echo -e "[azure-cli]\nname=Azure CLI\nbaseurl=https://packages.microsoft.com/yumrepos/azure-cli\nenabled=1\ngpgcheck=1\ngpgkey=https://packages.microsoft.com/keys/microsoft.asc" > /etc/yum.repos.d/azure-cli.repo'
+                  sudo yum install -y azure-cli
+                else
+                  echo "##[warning]Unsupported OS for automatic Azure CLI install. Please install 'az' manually on the agent."
+                  exit 0
+                fi
+              else
+                echo "Azure CLI already installed: $(az --version | head -n1)"
+              fi
+
+              # If service principal creds are provided, login; otherwise assume managed identity or prior login
+              if [ -n "${AZURE_CLIENT_ID:-}" ] && [ -n "${AZURE_CLIENT_SECRET:-}" ] && [ -n "${AZURE_TENANT_ID:-}" ]; then
+                echo "Logging in with Service Principal..."
+                az login --service-principal -u "${AZURE_CLIENT_ID}" -p "${AZURE_CLIENT_SECRET}" --tenant "${AZURE_TENANT_ID}"
+                if [ -n "${AZURE_SUBSCRIPTION_ID:-}" ]; then
+                  az account set --subscription "${AZURE_SUBSCRIPTION_ID}"
+                fi
+              else
+                echo "Service Principal not provided. Assuming agent already authenticated (managed identity or previously logged in)."
+              fi
+
               echo "Setting app settings via Azure CLI for app: mottu-api-1762730933 (resource group: ${AZURE_RESOURCE_GROUP})"
               az webapp config appsettings set --name mottu-api-1762730933 --resource-group "${AZURE_RESOURCE_GROUP}" --settings \
                 SPRING_PROFILES_ACTIVE=postgres \
                 "DB_URL=jdbc:postgresql://pg-flex-sprint4.postgres.database.azure.com:5432/appdb?sslmode=require" \
                 DB_USERNAME="${DB_USERNAME}" DB_PASSWORD="${DB_PASSWORD}"
-            displayName: 'Run az to set app settings (self-hosted)'
+            displayName: 'Ensure az and set app settings (self-hosted)'
             env:
               AZURE_RESOURCE_GROUP: $(AZURE_RESOURCE_GROUP)
               DB_USERNAME: $(DB_USERNAME)
               DB_PASSWORD: $(DB_PASSWORD)
+              AZURE_CLIENT_ID: $(AZURE_CLIENT_ID)
+              AZURE_CLIENT_SECRET: $(AZURE_CLIENT_SECRET)
+              AZURE_TENANT_ID: $(AZURE_TENANT_ID)
+              AZURE_SUBSCRIPTION_ID: $(AZURE_SUBSCRIPTION_ID)
           - bash: |
               if [ -z "${AZURE_RESOURCE_GROUP}" ]; then
                 echo "AZURE_RESOURCE_GROUP not set; skipping validation"
