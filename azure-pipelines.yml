@@ -6,9 +6,6 @@ pool:
   demands:
     - Agent.Version -gtVersion 2.200.0
 
-variables:
-  MAVEN_OPTS: '-Xmx512m -XX:+UseG1GC'
-
 stages:
   - stage: Build
     displayName: 'Build and Package'
@@ -33,11 +30,6 @@ stages:
               options: '-DskipTests'
               javaHomeOption: 'JDKVersion'
               jdkVersionOption: '1.17'
-            env:
-              DB_URL: 'jdbc:postgresql://pg-flex-sprint4.postgres.database.azure.com:5432/appdb?sslmode=require'
-              DB_USERNAME: '$(DB_USERNAME)'
-              DB_PASSWORD: '$(DB_PASSWORD)'
-              SPRING_PROFILES_ACTIVE: 'postgres'
 
           - task: CopyFiles@2
             displayName: 'Copy JAR to staging'
