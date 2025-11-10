@@ -40,17 +40,17 @@ stages:
               SPRING_PROFILES_ACTIVE: 'postgres'
 
           - task: CopyFiles@2
-            displayName: 'Copy JAR to artifact staging'
+            displayName: 'Copy JAR to staging'
             inputs:
               sourceFolder: '$(Build.SourcesDirectory)/mottu-api/target'
               contents: '*.jar'
               targetFolder: '$(Build.ArtifactStagingDirectory)'
 
           - task: PublishBuildArtifacts@1
-            displayName: 'Publish JAR artifact'
+            displayName: 'Publish artifact'
             inputs:
               pathToPublish: '$(Build.ArtifactStagingDirectory)'
-              artifactName: 'mottu-api-jar'
+              artifactName: 'mottu-api'
               publishLocation: 'Container'
 
   - stage: Deploy
@@ -59,23 +59,22 @@ stages:
     condition: succeeded()
     jobs:
       - job: DeployJob
-        displayName: 'Deploy JAR to App Service'
+        displayName: 'Deploy JAR'
         steps:
           - checkout: none
 
           - task: DownloadBuildArtifacts@0
-            displayName: 'Download JAR artifact'
             inputs:
               buildType: 'current'
               downloadType: 'single'
-              artifactName: 'mottu-api-jar'
+              artifactName: 'mottu-api'
               downloadPath: '$(System.ArtifactsDirectory)'
 
           - task: AzureWebApp@1
-            displayName: 'Deploy to Azure App Service'
+            displayName: 'Deploy to App Service'
             inputs:
               azureSubscription: 'Azure Subscription'
               appName: 'mottu-api-1762730933'
-              package: '$(System.ArtifactsDirectory)/mottu-api-jar'
+              package: '$(System.ArtifactsDirectory)/mottu-api'
               appType: 'webAppLinux'
               runtimeStack: 'JAVA|17-java17'
