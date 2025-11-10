@@ -124,8 +124,17 @@ stages:
               runtimeStack: 'JAVA|17-java17'
               # Start the specific jar
               startupCommand: 'java -Dserver.port=$PORT -jar /home/site/wwwroot/$(DEPLOY_JAR_NAME)'
-              appSettings: |
-                SPRING_PROFILES_ACTIVE=postgres
-                DB_URL=jdbc:postgresql://pg-flex-sprint4.postgres.database.azure.com:5432/appdb?sslmode=require
-                DB_USERNAME=$(DB_USERNAME)
-                DB_PASSWORD=$(DB_PASSWORD)
+          # Set app settings via Azure CLI to avoid AzureWebApp task formatting issues
+          - task: AzureCLI@2
+            displayName: 'Set App Settings (SPRING profile + DB)'
+            inputs:
+              azureSubscription: '$(AZURE_SERVICE_CONNECTION)'
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                echo "Setting App Settings for $APP"
+                az webapp config appsettings set --resource-group rg-devops-sprint4 --name mottu-api-1762730933 --settings \
+                  SPRING_PROFILES_ACTIVE=postgres \
+                  DB_URL='jdbc:postgresql://pg-flex-sprint4.postgres.database.azure.com:5432/appdb?sslmode=require' \
+                  DB_USERNAME=$(DB_USERNAME) \
+                  DB_PASSWORD=$(DB_PASSWORD)
