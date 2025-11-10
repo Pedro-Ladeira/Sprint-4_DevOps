@@ -7,6 +7,10 @@ pool:
   demands:
     - Agent.Version -gtVersion 2.200.0
 
+variables:
+  MAVEN_OPTS: '-Xmx512m -XX:+UseG1GC'
+  AZURE_SERVICE_CONNECTION: 'azure-subscription-RM'  # nome da AzureRM service connection
+
 stages:
   - stage: Build
     displayName: 'Build and Package'
@@ -124,9 +128,9 @@ stages:
               # Pass app settings as a JSON array of strings to avoid parsing issues
               appSettings: '["SPRING_PROFILES_ACTIVE=postgres","DB_URL=jdbc:postgresql://pg-flex-sprint4.postgres.database.azure.com:5432/appdb?sslmode=require","DB_USERNAME=$(DB_USERNAME)","DB_PASSWORD=$(DB_PASSWORD)"]'
       - job: SetAppSettingsAz
-        displayName: '(Optional) Set App Settings via Azure CLI (hosted agent)'
+        displayName: '(Optional) Set App Settings via Azure CLI (self-hosted)'
         pool:
-          vmImage: 'ubuntu-latest'
+          name: 'Default'  # use existing self-hosted agent pool instead of hosted 'ubuntu-latest'
         steps:
           - bash: |
               if [ -z "${AZURE_RESOURCE_GROUP}" ]; then
@@ -138,21 +142,23 @@ stages:
                 SPRING_PROFILES_ACTIVE=postgres \
                 "DB_URL=jdbc:postgresql://pg-flex-sprint4.postgres.database.azure.com:5432/appdb?sslmode=require" \
                 DB_USERNAME="${DB_USERNAME}" DB_PASSWORD="${DB_PASSWORD}"
-            displayName: 'Run az to set app settings'
+            displayName: 'Run az to set app settings (self-hosted)'
             env:
               AZURE_RESOURCE_GROUP: $(AZURE_RESOURCE_GROUP)
               DB_USERNAME: $(DB_USERNAME)
               DB_PASSWORD: $(DB_PASSWORD)
-          - task: AzureCLI@2
-            displayName: 'Azure CLI - validate webapp settings (dry-run)'
-            inputs:
-              azureSubscription: '$(AZURE_SERVICE_CONNECTION)'
-              scriptType: 'bash'
-              scriptLocation: 'inlineScript'
-              inlineScript: |
-                if [ -z "${AZURE_RESOURCE_GROUP}" ]; then
-                  echo "AZURE_RESOURCE_GROUP not set; skipping validation"
-                  exit 0
-                fi
-                echo "Listing current app settings for mottu-api-1762730933"
-                az webapp config appsettings list --name mottu-api-1762730933 --resource-group "${AZURE_RESOURCE_GROUP}"
+          - bash: |
+              if [ -z "${AZURE_RESOURCE_GROUP}" ]; then
+                echo "AZURE_RESOURCE_GROUP not set; skipping validation"
+                exit 0
+              fi
+              if ! command -v az >/dev/null 2>&1; then
+                echo "##[warning]Azure CLI (az) not found on this agent. To enable validation via az, install Azure CLI on the self-hosted agent or run this job on a hosted image."
+                echo "To install on Ubuntu: curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash"
+                exit 0
+              fi
+              echo "Listing current app settings for mottu-api-1762730933"
+              az webapp config appsettings list --name mottu-api-1762730933 --resource-group "${AZURE_RESOURCE_GROUP}"
+            displayName: 'Validate webapp settings via az (if available)'
+            env:
+              AZURE_RESOURCE_GROUP: $(AZURE_RESOURCE_GROUP)
