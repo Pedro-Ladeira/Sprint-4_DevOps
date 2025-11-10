@@ -80,6 +80,7 @@ stages:
     jobs:
       - job: DeployJob
         displayName: 'Deploy JAR'
+        dependsOn: SetAppSettingsAz
         steps:
           - checkout: none
           - task: DownloadBuildArtifacts@0
@@ -124,11 +125,38 @@ stages:
               runtimeStack: 'JAVA|17-java17'
               # Start the specific jar
               startupCommand: 'java -Dserver.port=$PORT -jar /home/site/wwwroot/$(DEPLOY_JAR_NAME)'
-              # Set app settings here to avoid requiring the Azure CLI on the build agent
-              appSettings: |
-                - SPRING_PROFILES_ACTIVE=postgres
-                - DB_URL=jdbc:postgresql://pg-flex-sprint4.postgres.database.azure.com:5432/appdb?sslmode=require
-                - DB_USERNAME=$(DB_USERNAME)
-                - DB_PASSWORD=$(DB_PASSWORD)
-          # NOTE: removed AzureCLI@2 step because some agents (self-hosted) may not have 'az' installed.
-          # If you must run az commands, either install Azure CLI on the agent image or run this job on a hosted image that includes Azure CLI (e.g., ubuntu-latest) or use the Azure CLI task on that hosted image.
+              # Pass app settings as a JSON array of strings to avoid parsing issues
+              appSettings: '["SPRING_PROFILES_ACTIVE=postgres","DB_URL=jdbc:postgresql://pg-flex-sprint4.postgres.database.azure.com:5432/appdb?sslmode=require","DB_USERNAME=$(DB_USERNAME)","DB_PASSWORD=$(DB_PASSWORD)"]'
+      - job: SetAppSettingsAz
+        displayName: '(Optional) Set App Settings via Azure CLI (hosted agent)'
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - bash: |
+              if [ -z "${AZURE_RESOURCE_GROUP}" ]; then
+                echo "##[warning]AZURE_RESOURCE_GROUP is not set. Skipping Azure CLI app settings step."
+                exit 0
+              fi
+              echo "Setting app settings via Azure CLI for app: mottu-api-1762730933 (resource group: ${AZURE_RESOURCE_GROUP})"
+              az webapp config appsettings set --name mottu-api-1762730933 --resource-group "${AZURE_RESOURCE_GROUP}" --settings \
+                SPRING_PROFILES_ACTIVE=postgres \
+                "DB_URL=jdbc:postgresql://pg-flex-sprint4.postgres.database.azure.com:5432/appdb?sslmode=require" \
+                DB_USERNAME="${DB_USERNAME}" DB_PASSWORD="${DB_PASSWORD}"
+            displayName: 'Run az to set app settings'
+            env:
+              AZURE_RESOURCE_GROUP: $(AZURE_RESOURCE_GROUP)
+              DB_USERNAME: $(DB_USERNAME)
+              DB_PASSWORD: $(DB_PASSWORD)
+          - task: AzureCLI@2
+            displayName: 'Azure CLI - validate webapp settings (dry-run)'
+            inputs:
+              azureSubscription: '$(AZURE_SERVICE_CONNECTION)'
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                if [ -z "${AZURE_RESOURCE_GROUP}" ]; then
+                  echo "AZURE_RESOURCE_GROUP not set; skipping validation"
+                  exit 0
+                fi
+                echo "Listing current app settings for mottu-api-1762730933"
+                az webapp config appsettings list --name mottu-api-1762730933 --resource-group "${AZURE_RESOURCE_GROUP}"
